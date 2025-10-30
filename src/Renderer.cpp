@@ -3,12 +3,17 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_ttf.h>
+#include "SDL_surface.h"
 #include <chrono>
-#include "Game.h"
+#include "Renderer.h"
+
+#include <execution>
+
+#include "FlyFish.h"
 #include "utils.h"
 #include "structs.h"
 
-Game::Game(const Window& window)
+Renderer::Renderer(const Window& window)
 	: m_Window{ window }
 	, m_Viewport{ 0,0,window.width,window.height }
 	, m_pWindow{ nullptr }
@@ -16,20 +21,20 @@ Game::Game(const Window& window)
 	, m_Initialized{ false }
 	, m_MaxElapsedSeconds{ 0.1f }
 {
-	InitializeGameEngine();
+	InitializeRenderer();
 }
 
-Game::~Game()
+Renderer::~Renderer()
 {
-	CleanupGameEngine();
+	CleanupRenderer();
 }
 
-void Game::InitializeGameEngine()
+void Renderer::InitializeRenderer()
 {
 	// Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
-		std::cerr << "BaseGame::Initialize( ), error when calling SDL_Init: " << SDL_GetError() << std::endl;
+		std::cerr << "Renderer::Initialize( ), error when calling SDL_Init: " << SDL_GetError() << std::endl;
 		return;
 	}
 
@@ -47,7 +52,7 @@ void Game::InitializeGameEngine()
 		SDL_WINDOW_OPENGL);
 	if (m_pWindow == nullptr)
 	{
-		std::cerr << "BaseGame::Initialize( ), error when calling SDL_CreateWindow: " << SDL_GetError() << std::endl;
+		std::cerr << "Renderer::Initialize( ), error when calling SDL_CreateWindow: " << SDL_GetError() << std::endl;
 		return;
 	}
 
@@ -55,7 +60,7 @@ void Game::InitializeGameEngine()
 	m_pContext = SDL_GL_CreateContext(m_pWindow);
 	if (m_pContext == nullptr)
 	{
-		std::cerr << "BaseGame::Initialize( ), error when calling SDL_GL_CreateContext: " << SDL_GetError() << std::endl;
+		std::cerr << "Renderer::Initialize( ), error when calling SDL_GL_CreateContext: " << SDL_GetError() << std::endl;
 		return;
 	}
 
@@ -65,7 +70,7 @@ void Game::InitializeGameEngine()
 	{
 		if (SDL_GL_SetSwapInterval(1) < 0)
 		{
-			std::cerr << "BaseGame::Initialize( ), error when calling SDL_GL_SetSwapInterval: " << SDL_GetError() << std::endl;
+			std::cerr << "Renderer::Initialize( ), error when calling SDL_GL_SetSwapInterval: " << SDL_GetError() << std::endl;
 			return;
 		}
 	}
@@ -96,14 +101,20 @@ void Game::InitializeGameEngine()
 	// Initialize SDL_ttf
 	if (TTF_Init() == -1)
 	{
-		std::cerr << "BaseGame::Initialize( ), error when calling TTF_Init: " << TTF_GetError() << std::endl;
+		std::cerr << "Renderer::Initialize( ), error when calling TTF_Init: " << TTF_GetError() << std::endl;
 		return;
 	}
+
+
+	m_pBuffer = SDL_GetWindowSurface(m_pWindow);
+
+	SDL_GetWindowSize(m_pWindow, &m_Width, &m_Height);
+	m_pBufferPixels = static_cast<uint32_t*>(m_pBuffer->pixels);
 
 	m_Initialized = true;
 }
 
-void Game::Run()
+void Renderer::Run()
 {
 	if (!m_Initialized)
 	{
@@ -166,19 +177,16 @@ void Game::Run()
 			// Prevent jumps in time caused by break points
 			elapsedSeconds = std::min(elapsedSeconds, m_MaxElapsedSeconds);
 
-			// Call the BaseGame object 's Update function, using time in seconds (!)
+			// Call the object 's Update function, using time in seconds (!)
 			this->Update(elapsedSeconds);
 
 			// Draw in the back buffer
-			this->Draw();
-
-			// Update screen: swap back and front buffer
-			SDL_GL_SwapWindow(m_pWindow);
+			this->Render();
 		}
 	}
 }
 
-void Game::CleanupGameEngine()
+void Renderer::CleanupRenderer()
 {
 	SDL_GL_DeleteContext(m_pContext);
 
@@ -191,10 +199,40 @@ void Game::CleanupGameEngine()
 
 }
 
-void Game::Update(float elapsedSec)
+void Renderer::Update(float elapsedSec)
 {
 }
 
-void Game::Draw() const
+void Renderer::Render()
 {
+	const uint32_t amountOfPixels{ uint32_t(m_Width * m_Height) };
+
+	std::vector<uint32_t> pixelIndices{};
+
+	pixelIndices.reserve(amountOfPixels);
+
+	for (uint32_t index{}; index < amountOfPixels; ++index)
+	{
+		pixelIndices.emplace_back(index);
+	}
+
+	std::for_each(std::execution::par, pixelIndices.begin(), pixelIndices.end(), [&](const int i)
+		{
+			RenderPixel(i);
+		});
+
+	SDL_UpdateWindowSurface(m_pWindow);
+}
+
+void Renderer::RenderPixel(uint32_t pixelIndex)
+{
+	const uint32_t px{ pixelIndex % m_Width };
+	const uint32_t py{ pixelIndex / m_Width };
+
+	Color4f finalColor{0.3f, 0.3f, 0.3f, 1.0f};
+
+	m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
+		static_cast<uint8_t>(finalColor.r * 255),
+		static_cast<uint8_t>(finalColor.g * 255),
+		static_cast<uint8_t>(finalColor.b * 255));
 }

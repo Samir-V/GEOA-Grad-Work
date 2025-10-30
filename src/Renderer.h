@@ -3,22 +3,22 @@
 #include "SDL.h"
 #include "SDL_opengl.h"
 
-class Game
+class Renderer
 {
 public:
-	explicit Game( const Window& window );
-	Game( const Game& other ) = delete;
-	Game& operator=( const Game& other ) = delete;
-	Game(Game&& other) = delete;
-	Game& operator=(Game&& other) = delete;
+	explicit Renderer( const Window& window );
+	Renderer( const Renderer& other ) = delete;
+	Renderer& operator=( const Renderer& other ) = delete;
+	Renderer(Renderer&& other) = delete;
+	Renderer& operator=(Renderer&& other) = delete;
 
-	~Game();
+	~Renderer();
 
 	void Run( );
 
 	void Update(float elapsedSec);
 
-	void Draw() const;
+	void Render();
 
 	// Event handling
 	void ProcessKeyDownEvent(const SDL_KeyboardEvent& e)
@@ -60,8 +60,18 @@ private:
 	bool m_Initialized;
 	// Prevent timing jumps when debugging
 	const float m_MaxElapsedSeconds;
-	
+
+
+	// Rendering info
+	SDL_Surface* m_pBuffer{};
+	uint32_t* m_pBufferPixels{};
+
+	int m_Height;
+	int m_Width;
+
+
 	// FUNCTIONS
-	void InitializeGameEngine( );
-	void CleanupGameEngine( );
+	void InitializeRenderer( );
+	void CleanupRenderer( );
+	void RenderPixel(uint32_t pixelIndex);
 };

@@ -92,6 +92,21 @@ public:
         return first ? "0" : output.str(); // Return "0" if all coefficients are zero.
     }
 
+    bool IsZero() const
+    {
+        bool nonZero = true;
+        for (size_t index = 0; index < data.size(); ++index)
+        {
+            if (std::fabs(data[index]) > 1e-6)
+            {
+                nonZero = false;
+                break;
+			}
+        }
+
+        return nonZero;
+    }
+
     // Iterator support
     auto begin() { return data.begin(); }
     auto end() { return data.end(); }
