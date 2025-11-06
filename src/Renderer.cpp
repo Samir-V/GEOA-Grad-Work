@@ -131,6 +131,8 @@ void Renderer::Run()
 
 	// Set start time
 	std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+	std::chrono::steady_clock::time_point fpsTimer = t1;
+	int frameCount = 0;
 
 	//The event loop
 	SDL_Event e{};
@@ -185,6 +187,17 @@ void Renderer::Run()
 
 			// Draw in the back buffer
 			this->Render();
+
+			// Calculate fps
+			++frameCount;
+			auto fpsNow = std::chrono::steady_clock::now();
+			float fpsElapsed = std::chrono::duration<float>(fpsNow - fpsTimer).count();
+			if (fpsElapsed >= 1.0f)
+			{
+				std::cout << "FPS: " << frameCount / fpsElapsed << std::endl;
+				frameCount = 0;
+				fpsTimer = fpsNow;
+			}
 		}
 	}
 }
@@ -253,8 +266,6 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 	TwoBlade worldRayDir = pCamera->CameraToWorldLine(rayDirNorm);
 
 	Color4f finalColor{0.3f, 0.3f, 0.3f, 1.0f};
-
-
 
 	m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
 		static_cast<uint8_t>(finalColor.r * 255),
