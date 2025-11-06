@@ -10,7 +10,7 @@ public:
 		m_Origin{std::move(origin)},
 		m_FovAngle{ _fovAngle }
 	{
-		m_FinalTransform = Motor(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f);
+		m_Transform = Motor{1, 0, 0, 0, 0, 0, 0, 1};
 	}
 
 	const ThreeBlade& GetOrigin() const;
@@ -22,5 +22,5 @@ private:
 	ThreeBlade m_Origin{};
 	float m_FovAngle{ 60.f };
 
-	Motor m_FinalTransform;
+	Motor m_Transform;
 };

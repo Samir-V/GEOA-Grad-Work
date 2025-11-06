@@ -115,6 +115,8 @@ void Renderer::InitializeRenderer()
 	m_CameraUPtr = std::make_unique<Camera>(ThreeBlade(0.f, 0.f, 0.f), 60.f);
 
 	m_Initialized = true;
+
+	m_TestPlane = Plane(OneBlade{0, 0, 0, 1}, Color4f{0.4f, 0.1f, 0.8f, 1.0f});
 }
 
 void Renderer::Run()
@@ -217,6 +219,9 @@ void Renderer::CleanupRenderer()
 
 void Renderer::Update(float elapsedSec)
 {
+	//auto rot = Motor::Rotation(3.0f * elapsedSec, TwoBlade(0, 0, 0, 0, 0, 0));
+
+	//m_TestPlane.PlaneGenerators = (rot * m_TestPlane.PlaneGenerators * ~rot).Grade1().Normalized();
 }
 
 void Renderer::Render()
@@ -247,6 +252,12 @@ void Renderer::Render()
 			RenderPixel(index, FOVScalar, aspectRatio, m_CameraUPtr.get());
 		});
 
+
+	/*for (int index = 0; index < pixelIndices.size(); ++index)
+	{
+		RenderPixel(index, FOVScalar, aspectRatio, m_CameraUPtr.get());
+	}*/
+
 	SDL_UpdateWindowSurface(m_pWindow);
 }
 
@@ -260,12 +271,16 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 	const float camX{ (2 * (rx / static_cast<float>(m_Width)) - 1) * aspectRatio * fov };
 	const float camY{ (1 - 2 * (ry / static_cast<float>(m_Height))) * fov };
 
-	ThreeBlade rayDirOrigin = ThreeBlade(camX, camY, 0.0f);
+	ThreeBlade rayDirOrigin = ThreeBlade(camX, camY, 0);
 	ThreeBlade rayDirLookAtPoint = ThreeBlade(camX, camY, 1.0f);
 	TwoBlade rayDirNorm = (rayDirOrigin & rayDirLookAtPoint).Normalized();
-	TwoBlade worldRayDir = pCamera->CameraToWorldLine(rayDirNorm);
 
 	Color4f finalColor{0.3f, 0.3f, 0.3f, 1.0f};
+
+	if (HitPlane(pCamera->CameraToWorldLine(rayDirNorm), m_TestPlane))
+	{
+		finalColor = m_TestPlane.Color;
+	}
 
 	m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
 		static_cast<uint8_t>(finalColor.r * 255),

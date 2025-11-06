@@ -4,6 +4,8 @@
 #include "SDL_opengl.h"
 #include <memory>
 
+#include "GEOAUtils.h"
+
 class Camera;
 
 class Renderer
@@ -76,6 +78,8 @@ private:
 	int m_Height;
 	int m_Width;
 
+
+	Plane m_TestPlane;
 
 	// FUNCTIONS
 	void InitializeRenderer( );

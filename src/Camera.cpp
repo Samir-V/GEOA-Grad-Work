@@ -8,12 +8,12 @@ const ThreeBlade& Camera::GetOrigin() const
 
 ThreeBlade Camera::CameraToWorldPoint(const ThreeBlade& point) const
 {
-	return (m_FinalTransform * point * ~m_FinalTransform).Grade3();
+	return (m_Transform * point * ~m_Transform).Grade3();
 }
 
 TwoBlade Camera::CameraToWorldLine(const TwoBlade& line) const
 {
-	return (m_FinalTransform * line * ~m_FinalTransform).Grade2();
+	return (m_Transform * line * ~m_Transform).Grade2();
 }
 
 float Camera::GetFOVAngle() const
