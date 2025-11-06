@@ -116,7 +116,7 @@ void Renderer::InitializeRenderer()
 
 	m_Initialized = true;
 
-	m_TestPlane = Plane(OneBlade{0, 0, 0, 1}, Color4f{0.4f, 0.1f, 0.8f, 1.0f});
+	m_TestPlane = Plane(OneBlade{0, 0, 1, 1}, Color4f{0.4f, 0.1f, 0.8f, 1.0f});
 }
 
 void Renderer::Run()
@@ -253,11 +253,6 @@ void Renderer::Render()
 		});
 
 
-	/*for (int index = 0; index < pixelIndices.size(); ++index)
-	{
-		RenderPixel(index, FOVScalar, aspectRatio, m_CameraUPtr.get());
-	}*/
-
 	SDL_UpdateWindowSurface(m_pWindow);
 }
 
@@ -271,15 +266,22 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 	const float camX{ (2 * (rx / static_cast<float>(m_Width)) - 1) * aspectRatio * fov };
 	const float camY{ (1 - 2 * (ry / static_cast<float>(m_Height))) * fov };
 
-	ThreeBlade rayDirOrigin = ThreeBlade(camX, camY, 0);
-	ThreeBlade rayDirLookAtPoint = ThreeBlade(camX, camY, 1.0f);
-	TwoBlade rayDirNorm = (rayDirOrigin & rayDirLookAtPoint).Normalized();
+	auto rayDirNorm = TwoBlade(0, 0, 0, camX, camY, 1.0f).Normalize();
 
 	Color4f finalColor{0.3f, 0.3f, 0.3f, 1.0f};
 
-	if (HitPlane(pCamera->CameraToWorldLine(rayDirNorm), m_TestPlane))
+	float dummyDistance{};
+
+	if (HitPlane(pCamera->CameraToWorldLine(rayDirNorm), m_TestPlane, m_CameraUPtr.get(), dummyDistance))
 	{
-		finalColor = m_TestPlane.Color;
+		float depthIntensity = 1.0f / (1.0f + dummyDistance * 0.1f);
+
+		finalColor = Color4f{
+			m_TestPlane.Color.r * depthIntensity,
+			m_TestPlane.Color.g * depthIntensity,
+			m_TestPlane.Color.b * depthIntensity,
+			1.0f
+		};
 	}
 
 	m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,

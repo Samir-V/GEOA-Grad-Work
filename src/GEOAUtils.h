@@ -1,4 +1,5 @@
 #pragma once
+#include "Camera.h"
 #include "FlyFish.h"
 #include "structs.h"
 
@@ -18,14 +19,22 @@ struct LightRay
 	
 };
 
-inline bool HitPlane(const TwoBlade& ray, const Plane& plane)
+inline bool HitPlane(const TwoBlade& line, const Plane& plane, const Camera* pCamera, float& outDistance)
 {
-	const auto hit = ray ^ plane.PlaneGenerators;
+	const auto hit = line ^ plane.PlaneGenerators;
 	
 	if (hit.IsZero() || hit.Norm() == 0.0f)
 	{
 		return false;
 	}
 
-	return true;
+	auto toHitDistance = (pCamera->GetOrigin() & hit).Norm();
+
+	if (toHitDistance > 0.001f)
+	{
+		outDistance = toHitDistance;
+		return true;
+	}
+
+	return false;
 }
