@@ -2,6 +2,7 @@
 #include "structs.h"
 #include "SDL.h"
 #include "SDL_opengl.h"
+#include <memory>
 
 class Camera;
 
@@ -66,7 +67,7 @@ private:
 
 	// Camera info
 
-	std::unique_ptr<Camera> m_CameraUPtr{};
+	std::unique_ptr<Camera> m_CameraUPtr;
 
 	// Rendering info
 	SDL_Surface* m_pBuffer{};
