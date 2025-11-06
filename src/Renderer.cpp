@@ -12,6 +12,7 @@
 #include "FlyFish.h"
 #include "utils.h"
 #include "structs.h"
+#include "Camera.h"
 
 Renderer::Renderer(const Window& window)
 	: m_Window{ window }
@@ -111,6 +112,8 @@ void Renderer::InitializeRenderer()
 	SDL_GetWindowSize(m_pWindow, &m_Width, &m_Height);
 	m_pBufferPixels = static_cast<uint32_t*>(m_pBuffer->pixels);
 
+	m_CameraUPtr = std::make_unique<Camera>(ThreeBlade(0.f, 0.f, 0.f), 60.f);
+
 	m_Initialized = true;
 }
 
@@ -205,6 +208,16 @@ void Renderer::Update(float elapsedSec)
 
 void Renderer::Render()
 {
+	// Camera info
+
+	const float aspectRatio{ static_cast<float>(m_Width) / static_cast<float>(m_Height) };
+
+	const float FOVAngleRad{ m_CameraUPtr->GetFOVAngle() * utils::g_Pi / 180.0f };
+
+	const float FOVScalar{ tanf(FOVAngleRad / 2.0f) };
+
+	// Render info
+
 	const uint32_t amountOfPixels{ uint32_t(m_Width * m_Height) };
 
 	std::vector<uint32_t> pixelIndices{};
@@ -216,20 +229,32 @@ void Renderer::Render()
 		pixelIndices.emplace_back(index);
 	}
 
-	std::for_each(std::execution::par, pixelIndices.begin(), pixelIndices.end(), [&](const int i)
+	std::for_each(std::execution::par, pixelIndices.begin(), pixelIndices.end(), [&](const int index)
 		{
-			RenderPixel(i);
+			RenderPixel(index, FOVScalar, aspectRatio, m_CameraUPtr.get());
 		});
 
 	SDL_UpdateWindowSurface(m_pWindow);
 }
 
-void Renderer::RenderPixel(uint32_t pixelIndex)
+void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, const Camera* pCamera) const
 {
 	const uint32_t px{ pixelIndex % m_Width };
 	const uint32_t py{ pixelIndex / m_Width };
 
+	const float rx{ px + 0.5f };
+	const float ry{ py + 0.5f };
+	const float camX{ (2 * (rx / static_cast<float>(m_Width)) - 1) * aspectRatio * fov };
+	const float camY{ (1 - 2 * (ry / static_cast<float>(m_Height))) * fov };
+
+	ThreeBlade rayDirOrigin = ThreeBlade(camX, camY, 0.0f);
+	ThreeBlade rayDirLookAtPoint = ThreeBlade(camX, camY, 1.0f);
+	TwoBlade rayDirNorm = (rayDirOrigin & rayDirLookAtPoint).Normalized();
+	TwoBlade worldRayDir = pCamera->CameraToWorldLine(rayDirNorm);
+
 	Color4f finalColor{0.3f, 0.3f, 0.3f, 1.0f};
+
+
 
 	m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
 		static_cast<uint8_t>(finalColor.r * 255),

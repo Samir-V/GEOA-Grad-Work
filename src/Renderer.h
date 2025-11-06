@@ -3,6 +3,8 @@
 #include "SDL.h"
 #include "SDL_opengl.h"
 
+class Camera;
+
 class Renderer
 {
 public:
@@ -62,6 +64,10 @@ private:
 	const float m_MaxElapsedSeconds;
 
 
+	// Camera info
+
+	std::unique_ptr<Camera> m_CameraUPtr{};
+
 	// Rendering info
 	SDL_Surface* m_pBuffer{};
 	uint32_t* m_pBufferPixels{};
@@ -73,5 +79,5 @@ private:
 	// FUNCTIONS
 	void InitializeRenderer( );
 	void CleanupRenderer( );
-	void RenderPixel(uint32_t pixelIndex);
+	void RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, const Camera* pCamera) const;
 };
