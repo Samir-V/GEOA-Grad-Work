@@ -116,7 +116,7 @@ void Renderer::InitializeRenderer()
 
 	m_Initialized = true;
 
-	m_TestPlane = Plane(OneBlade{0, 0, 1, 1}, Color4f{0.4f, 0.1f, 0.8f, 1.0f});
+	m_TestPlane = Plane(OneBlade{1, 0, 1, 0, }, Color4f{0.4f, 0.1f, 0.8f, 1.0f});
 }
 
 void Renderer::Run()

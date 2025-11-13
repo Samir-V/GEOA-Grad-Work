@@ -10,7 +10,7 @@ public:
 		m_Origin{std::move(origin)},
 		m_FovAngle{ _fovAngle }
 	{
-		m_Transform = Motor{1, 0, 0, 0, 0, 0, 0, 1};
+		m_Transform = Motor{1, 0, 0, 0, 0, 0, 0, 0};
 	}
 
 	const ThreeBlade& GetOrigin() const;
