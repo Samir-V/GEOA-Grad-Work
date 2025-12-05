@@ -22,15 +22,16 @@ struct LightRay
 inline bool HitPlane(const TwoBlade& line, const Plane& plane, const Camera* pCamera, float& outDistance)
 {
 	const auto hit = line ^ plane.PlaneGenerators;
-	
-	if (hit.IsZero() || hit.Norm() == 0.0f)
+
+	if (hit.IsZero() || hit[3] < 0.0f)
 	{
 		return false;
 	}
 
-	auto toHitDistance = (pCamera->GetOrigin() & hit).Norm();
+	auto lineToHit = pCamera->GetOrigin() & hit;
+	float toHitDistance = lineToHit.Norm() / hit[3];
 
-	if (toHitDistance > 0.001f)
+	if (toHitDistance > 0.001f && toHitDistance < 1000.0f)
 	{
 		outDistance = toHitDistance;
 		return true;

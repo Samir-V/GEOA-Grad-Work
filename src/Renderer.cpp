@@ -13,6 +13,7 @@
 #include "utils.h"
 #include "structs.h"
 #include "Camera.h"
+	#include "GEOAUtils.h"
 
 Renderer::Renderer(const Window& window)
 	: m_Window{ window }
@@ -116,7 +117,11 @@ void Renderer::InitializeRenderer()
 
 	m_Initialized = true;
 
-	m_TestPlane = Plane(OneBlade{1, 0, 1, 0, }, Color4f{0.4f, 0.1f, 0.8f, 1.0f});
+	m_TestPlane = Plane();
+
+	m_TestPlane.Color = Color4f{0.4f, 0.1f, 0.8f, 1.0f};
+	m_TestPlane.PlaneGenerators = OneBlade{5.0f, 0, 0, 1}.Normalized();
+
 }
 
 void Renderer::Run()
@@ -219,9 +224,10 @@ void Renderer::CleanupRenderer()
 
 void Renderer::Update(float elapsedSec)
 {
-	//auto rot = Motor::Rotation(3.0f * elapsedSec, TwoBlade(0, 0, 0, 0, 0, 0));
+	auto rot = Motor::Rotation(40.0f * elapsedSec, TwoBlade{0, 0, 0, 0, 1, 0});
 
-	//m_TestPlane.PlaneGenerators = (rot * m_TestPlane.PlaneGenerators * ~rot).Grade1().Normalized();
+	auto newPlane = (rot * m_TestPlane.PlaneGenerators * ~rot).Grade1();
+	m_TestPlane.PlaneGenerators = newPlane.Normalized();
 }
 
 void Renderer::Render()

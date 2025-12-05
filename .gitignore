@@ -34,3 +34,7 @@
 
 # Build Files
 src/out/
+/.claude
+/.vscode
+/build
+*.pdb

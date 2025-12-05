@@ -541,9 +541,9 @@ return res;
 {
     MultiVector res{};
     res[1] = data[0] * b[0] - data[1] * b[1] - data[2] * b[2] - data[3] * b[3];
-    res[2] = data[0] * b[1] - data[6] * b[2] + data[5] * b[3];
-    res[3] = data[6] * b[1] + data[0] * b[2] - data[4] * b[3];
-    res[4] = -data[5] * b[1] + data[4] * b[2] + data[0] * b[3];
+    res[2] = data[0] * b[1] + data[6] * b[2] - data[5] * b[3];
+    res[3] = -data[6] * b[1] + data[0] * b[2] + data[4] * b[3];
+    res[4] = data[5] * b[1] - data[4] * b[2] + data[0] * b[3];
     res[11] = -data[4] * b[0] + data[7] * b[1] + data[3] * b[2] - data[2] * b[3];
     res[12] = -data[5] * b[0] - data[3] * b[1] + data[7] * b[2] + data[1] * b[3];
     res[13] = -data[6] * b[0] + data[2] * b[1] - data[1] * b[2] + data[7] * b[3];
