@@ -3,6 +3,7 @@
 #include "SDL.h"
 #include "SDL_opengl.h"
 #include <memory>
+#include <unordered_set>
 
 #include "GEOAUtils.h"
 
@@ -26,26 +27,11 @@ public:
 	void Render();
 
 	// Event handling
-	void ProcessKeyDownEvent(const SDL_KeyboardEvent& e)
-	{
-
-	}
-	void ProcessKeyUpEvent(const SDL_KeyboardEvent& e)
-	{
-
-	}
-	void ProcessMouseMotionEvent(const SDL_MouseMotionEvent& e)
-	{
-		
-	}
-	void ProcessMouseDownEvent(const SDL_MouseButtonEvent& e)
-	{
-		
-	}
-	void ProcessMouseUpEvent(const SDL_MouseButtonEvent& e)
-	{
-		
-	}
+	void ProcessKeyDownEvent(const SDL_KeyboardEvent& e);
+	void ProcessKeyUpEvent(const SDL_KeyboardEvent& e);
+	void ProcessMouseMotionEvent(const SDL_MouseMotionEvent& e);
+	void ProcessMouseDownEvent(const SDL_MouseButtonEvent& e);
+	void ProcessMouseUpEvent(const SDL_MouseButtonEvent& e);
 
 	const Rectf& GetViewPort() const
 	{
@@ -68,8 +54,11 @@ private:
 
 
 	// Camera info
-
 	std::unique_ptr<Camera> m_CameraUPtr;
+
+	// Input state
+	std::unordered_set<SDL_Keycode> m_PressedKeys;
+	bool m_MouseCaptured{ false };
 
 	// Rendering info
 	SDL_Surface* m_pBuffer{};
@@ -80,9 +69,11 @@ private:
 
 
 	Plane m_TestPlane;
+	Sphere m_TestSphere;
 
 	// FUNCTIONS
 	void InitializeRenderer( );
 	void CleanupRenderer( );
 	void RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, const Camera* pCamera) const;
+	void ProcessCameraInput(float elapsedSec);
 };

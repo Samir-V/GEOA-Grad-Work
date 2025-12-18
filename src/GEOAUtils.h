@@ -11,7 +11,9 @@ struct Plane
 
 struct Sphere
 {
-	
+	TriVector Origin;
+	float Radius;
+	Color4f Color;
 };
 
 struct LightRay
@@ -38,4 +40,30 @@ inline bool HitPlane(const BiVector& line, const Plane& plane, const Camera* pCa
 	}
 
 	return false;
+}
+
+inline bool HitSphere(const BiVector& line, const Sphere& sphere, const Camera* pCamera, float& outShading)
+{
+    TriVector sphereCenter = sphere.Origin.Normalized();
+
+    Vector closestPlane = line | sphereCenter;
+    TriVector closestPoint = (closestPlane ^ line);
+
+    if (std::abs(closestPoint.e123()) < 0.0001f) return false;
+
+    TriVector closestNorm = closestPoint.Normalized();
+
+    TriVector camPos = pCamera->GetOrigin().Normalized();
+
+    BiVector toSphere = sphereCenter & camPos;
+    if ((toSphere | line) < 0) return false;  // Sphere is behind camera
+
+    float distToCenter = (closestNorm & sphereCenter).Norm();
+
+    if (distToCenter > sphere.Radius) return false;
+
+	// will be removed, only for testing purposes
+    outShading = 1.0f - (distToCenter / sphere.Radius);
+
+    return true;
 }

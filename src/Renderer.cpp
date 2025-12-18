@@ -117,11 +117,14 @@ void Renderer::InitializeRenderer()
 
 	m_Initialized = true;
 
-	m_TestPlane = Plane();
-
+	/*m_TestPlane = Plane();
 	m_TestPlane.Color = Color4f{0.4f, 0.1f, 0.8f, 1.0f};
-	m_TestPlane.PlaneGenerators = Vector{5.0f, 0, 0, 1}.Normalized();
+	m_TestPlane.PlaneGenerators = Vector{5.0f, 0, 0, 1}.Normalized();*/
 
+	m_TestSphere = Sphere();
+	m_TestSphere.Color = Color4f{ 0.4f, 0.1f, 0.8f, 1.0f };
+	m_TestSphere.Origin = TriVector{ 0.0f, 0.0f, 10.0f }.Normalized();
+	m_TestSphere.Radius = 3.0f;
 }
 
 void Renderer::Run()
@@ -224,10 +227,79 @@ void Renderer::CleanupRenderer()
 
 void Renderer::Update(float elapsedSec)
 {
+	// Process camera movement based on held keys
+	ProcessCameraInput(elapsedSec);
+
+	// Rotate the test plane
 	auto rot = Motor::Rotation(40.0f * elapsedSec, BiVector{0, 0, 0, 0, 1, 0});
 
 	auto newPlane = (rot * m_TestPlane.PlaneGenerators * ~rot).Grade1();
 	m_TestPlane.PlaneGenerators = newPlane.Normalized();
+}
+
+void Renderer::ProcessKeyDownEvent(const SDL_KeyboardEvent& e)
+{
+	m_PressedKeys.insert(e.keysym.sym);
+
+	// Toggle mouse capture with Escape key
+	if (e.keysym.sym == SDLK_ESCAPE)
+	{
+		m_MouseCaptured = !m_MouseCaptured;
+		SDL_SetRelativeMouseMode(m_MouseCaptured ? SDL_TRUE : SDL_FALSE);
+
+		if (m_MouseCaptured)
+		{
+			std::cout << "Mouse captured - move mouse to look around, WASD to move. Press ESC to release." << std::endl;
+		}
+		else
+		{
+			std::cout << "Mouse released. Press ESC to capture." << std::endl;
+		}
+	}
+}
+
+void Renderer::ProcessKeyUpEvent(const SDL_KeyboardEvent& e)
+{
+	m_PressedKeys.erase(e.keysym.sym);
+}
+
+void Renderer::ProcessMouseMotionEvent(const SDL_MouseMotionEvent& e)
+{
+	if (m_MouseCaptured)
+	{
+		float deltaYaw = static_cast<float>(e.xrel);
+		float deltaPitch = static_cast<float>(e.yrel);
+
+		m_CameraUPtr->Rotate(deltaYaw, deltaPitch);
+	}
+}
+
+void Renderer::ProcessMouseDownEvent(const SDL_MouseButtonEvent& e)
+{
+}
+
+void Renderer::ProcessMouseUpEvent(const SDL_MouseButtonEvent& e)
+{
+}
+
+void Renderer::ProcessCameraInput(float elapsedSec)
+{
+	float forward = 0.0f;
+	float right = 0.0f;
+	float up = 0.0f;
+
+	if (m_PressedKeys.count(SDLK_w)) forward += elapsedSec;
+	if (m_PressedKeys.count(SDLK_s)) forward -= elapsedSec;
+	if (m_PressedKeys.count(SDLK_d)) right += elapsedSec;
+	if (m_PressedKeys.count(SDLK_a)) right -= elapsedSec;
+
+	if (m_PressedKeys.count(SDLK_SPACE)) up += elapsedSec;
+	if (m_PressedKeys.count(SDLK_LSHIFT)) up -= elapsedSec;
+
+	if (forward != 0.0f || right != 0.0f || up != 0.0f)
+	{
+		m_CameraUPtr->Move(forward, right, up, elapsedSec);
+	}
 }
 
 void Renderer::Render()
@@ -276,16 +348,14 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 
 	Color4f finalColor{0.3f, 0.3f, 0.3f, 1.0f};
 
-	float dummyDistance{};
+	float shading{};
 
-	if (HitPlane(pCamera->CameraToWorldLine(rayDirNorm), m_TestPlane, m_CameraUPtr.get(), dummyDistance))
+	if (HitSphere(pCamera->CameraToWorldLine(rayDirNorm), m_TestSphere, m_CameraUPtr.get(), shading))
 	{
-		float depthIntensity = 1.0f / (1.0f + dummyDistance * 0.1f);
-
 		finalColor = Color4f{
-			m_TestPlane.Color.r * depthIntensity,
-			m_TestPlane.Color.g * depthIntensity,
-			m_TestPlane.Color.b * depthIntensity,
+			m_TestSphere.Color.r * shading,
+			m_TestSphere.Color.g * shading,
+			m_TestSphere.Color.b * shading,
 			1.0f
 		};
 	}

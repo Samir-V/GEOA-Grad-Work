@@ -18,9 +18,23 @@ public:
 	TriVector CameraToWorldPoint(const TriVector& point) const;
 	BiVector CameraToWorldLine(const BiVector& line) const;
 
+	// Camera control methods
+	void Rotate(float deltaYaw, float deltaPitch);
+	void Move(float forward, float right, float up, float elapsedSec);
+	void Update();
+
+	float MouseSensitivity{ 0.1f };
+	float MoveSpeed{ 5.0f };
+
 private:
 	TriVector m_Origin{};
 	float m_FovAngle{ 60.f };
 
+	float m_Yaw{ 0.0f };   
+	float m_Pitch{ 0.0f };
+
 	Motor m_Transform;
+
+
+	void UpdateTransform();
 };
