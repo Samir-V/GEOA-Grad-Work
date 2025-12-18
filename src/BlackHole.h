@@ -3,7 +3,7 @@
 
 struct BlackHoleData
 {
-	ThreeBlade Position;
+	TriVector Position;
 	double Mass;
 	double SchwarzschildRadius;
 	double PhotonSphereRadius;
@@ -13,13 +13,13 @@ struct BlackHoleData
 class BlackHole
 {
 public:
-	BlackHole(ThreeBlade pos, double mass);
+	BlackHole(TriVector pos, double mass);
 
 	[[nodiscard]] BlackHoleData GetData() const;
 
 private:
 
-	ThreeBlade m_Position;
+	TriVector m_Position;
 	double m_Mass;
 	double m_SchwarzschildRadius;
 	double m_PhotonSphereRadius;

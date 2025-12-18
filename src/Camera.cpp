@@ -1,17 +1,18 @@
 #include "Camera.h"
+#include "FlyFish.h"
 
-const ThreeBlade& Camera::GetOrigin() const
+const TriVector& Camera::GetOrigin() const
 {
 	return m_Origin; 
 }
 
 
-ThreeBlade Camera::CameraToWorldPoint(const ThreeBlade& point) const
+TriVector Camera::CameraToWorldPoint(const TriVector& point) const
 {
 	return (m_Transform * point * ~m_Transform).Grade3();
 }
 
-TwoBlade Camera::CameraToWorldLine(const TwoBlade& line) const
+BiVector Camera::CameraToWorldLine(const BiVector& line) const
 {
 	return (m_Transform * line * ~m_Transform).Grade2();
 }

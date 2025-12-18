@@ -2,24 +2,24 @@
 
 // Type conversions
 
-[[nodiscard]] TwoBlade Motor::Grade2() const
+[[nodiscard]] BiVector Motor::Grade2() const
 {
-    return TwoBlade(
+    return {
         data[1], data[2], data[3], data[4], data[5], data[6]
-    );
+    };
 }
-[[nodiscard]] OneBlade MultiVector::Grade1() const
+[[nodiscard]] Vector MultiVector::Grade1() const
 {
-    return OneBlade{
+    return Vector{
         data[1],
         data[2],
         data[3],
         data[4]
     };
 }
-[[nodiscard]] TwoBlade MultiVector::Grade2() const
+[[nodiscard]] BiVector MultiVector::Grade2() const
 {
-    return TwoBlade{
+    return BiVector{
         data[5],
         data[6],
         data[7],
@@ -28,9 +28,9 @@
         data[10]
     };
 }
-[[nodiscard]] ThreeBlade MultiVector::Grade3() const
+[[nodiscard]] TriVector MultiVector::Grade3() const
 {
-    return ThreeBlade{
+    return TriVector{
         data[11],
         data[12],
         data[13],
@@ -53,7 +53,7 @@
 
 // Copy/move assignments
 
-MultiVector& MultiVector::operator=(const ThreeBlade& b)
+MultiVector& MultiVector::operator=(const TriVector& b)
 {
     data.fill(0);
     data[11] = b[0];
@@ -62,7 +62,7 @@ MultiVector& MultiVector::operator=(const ThreeBlade& b)
     data[14] = b[3];
     return *this;
 }
-MultiVector& MultiVector::operator=(ThreeBlade&& b) noexcept
+MultiVector& MultiVector::operator=(TriVector&& b) noexcept
 {
     data.fill(0);
     data[11] = b[0];
@@ -71,7 +71,7 @@ MultiVector& MultiVector::operator=(ThreeBlade&& b) noexcept
     data[14] = b[3];
     return *this;
 };
-MultiVector& MultiVector::operator=(const TwoBlade& b)
+MultiVector& MultiVector::operator=(const BiVector& b)
 {
     data.fill(0);
     data[5] = b[0];
@@ -82,7 +82,7 @@ MultiVector& MultiVector::operator=(const TwoBlade& b)
     data[10] = b[5];
     return *this;
 }
-MultiVector& MultiVector::operator=(TwoBlade&& b) noexcept
+MultiVector& MultiVector::operator=(BiVector&& b) noexcept
 {
     data.fill(0);
     data[5] = b[0];
@@ -93,7 +93,7 @@ MultiVector& MultiVector::operator=(TwoBlade&& b) noexcept
     data[10] = b[5];
     return *this;
 };
-MultiVector& MultiVector::operator=(const OneBlade& b)
+MultiVector& MultiVector::operator=(const Vector& b)
 {
     data.fill(0);
     data[1] = b[0];
@@ -102,7 +102,7 @@ MultiVector& MultiVector::operator=(const OneBlade& b)
     data[4] = b[3];
     return *this;
 }
-MultiVector& MultiVector::operator=(OneBlade&& b) noexcept
+MultiVector& MultiVector::operator=(Vector&& b) noexcept
 {
     data.fill(0);
     data[1] = b[0];
@@ -138,6 +138,38 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     return *this;
 };
 
+[[nodiscard]] MultiVector MultiVector::operator~() const
+{
+    float s{}, t0{}, t1{}, t2{}, t3{}, ps{};
+    s = data[0] * data[0] - data[2] * data[2] - data[3] * data[3] - data[4] * data[4] + data[10] * data[10] + data[9] * data[9] + data[8] * data[8] - data[14] * data[14];
+    t0 = - 2 * (data[11] * data[0] + data[8] * data[1] + data[15] * data[2] - data[7] * data[3] + data[6] * data[4] - data[14] * data[5] + data[12] * data[10] - data[13] * data[9]);
+    t1 = - 2 * (data[12] * data[0] + data[9] * data[1] + data[7] * data[2] + data[15] * data[3] - data[5] * data[4] - data[14] * data[6] - data[11] * data[10] + data[13] * data[8]);
+    t2 = - 2 * (data[13] * data[0] + data[10] * data[1] - data[6] * data[2] + data[5] * data[3] + data[15] * data[4] - data[14] * data[7] + data[11] * data[9] - data[12] * data[8]);
+    t3 = - 2 * (data[14] * data[0] - data[8] * data[2] - data[9] * data[3] - data[10] * data[4]);
+    ps = - 2 * (data[15] * data[0] + data[14] * data[1] + data[11] * data[2] + data[12] * data[3] + data[13] * data[4] - data[8] * data[5] - data[9] * data[6] - data[10] * data[7]);
+
+    float denom{s * s + t3 * t3};
+    MultiVector numer{
+        s * data[0] - t3 * data[14],
+        - s * data[1] - t2 * data[10] - t1 * data[9] - t0 * data[8] + ps * data[14] - t3 * data[15],
+        - s * data[2] + t3 * data[8],
+        - s * data[3] + t3 * data[9],
+        - s * data[4] + t3 * data[10],
+        t2 * data[3] - t1 * data[4] - s * data[5] + ps * data[8] + t3 * data[11] - t0 * data[14],
+        - t2 * data[2] + t0 * data[4] - s * data[6] + ps * data[9] + t3 * data[12] - t1 * data[14],
+        t1 * data[2] - t0 * data[3] - s * data[7] + ps * data[10] + t3 * data[13] - t2 * data[14],
+        - t3 * data[2] - s * data[8],
+        - t3 * data[3] - s * data[9],
+        - t3 * data[4] - s * data[10],
+        t0 * data[0] - ps * data[2] + t3 * data[5] - t1 * data[10] + t2 * data[9] + s * data[11],
+        t1 * data[0] - ps * data[3] + t3 * data[6] + t0 * data[10] - t2 * data[8] + s * data[12],
+        t2 * data[0] - ps * data[4] + t3 * data[7] - t0 * data[9] + t1 * data[8] + s * data[13],
+        t3 * data[0] + s * data[14],
+        ps * data[0] - t3 * data[1] - t0 * data[2] - t1 * data[3] - t2 * data[4] + s * data[15]
+    };
+    return numer / denom;
+}
+
 // Geometric Product
 
 // MultiVector
@@ -161,7 +193,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[15] = b[15] * data[0] + b[14] * data[1] + b[11] * data[2] + b[12] * data[3] + b[13] * data[4] + b[8] * data[5] + b[9] * data[6] + b[10] * data[7] + b[7] * data[10] + b[6] * data[9] + b[5] * data[8] - b[4] * data[13] - b[3] * data[12] - b[2] * data[11] - b[1] * data[14] + b[0] * data[15];
     return res;
 };
-[[nodiscard]] MultiVector MultiVector::operator* (const ThreeBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator* (const TriVector& b) const
 {
     MultiVector res{};
     res[0] = - b[3] * data[14];
@@ -182,7 +214,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[15] = b[3] * data[1] + b[0] * data[2] + b[1] * data[3] + b[2] * data[4];
     return res;
 }
-[[nodiscard]] MultiVector MultiVector::operator* (const TwoBlade& b) const {
+[[nodiscard]] MultiVector MultiVector::operator* (const BiVector& b) const {
     MultiVector res{};
     res[0] = -b[5] * data[10] - b[4] * data[9] - b[3] * data[8];
     res[1] = -b[0] * data[2] - b[1] * data[3] - b[2] * data[4] + b[5] * data[13] + b[4] * data[12] + b[3] * data[11];
@@ -202,7 +234,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[15] = b[3] * data[5] + b[4] * data[6] + b[5] * data[7] + b[2] * data[10] + b[1] * data[9] + b[0] * data[8];
     return res;
 };
-[[nodiscard]] MultiVector MultiVector::operator* (const OneBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator* (const Vector& b) const
 {
     MultiVector res{};
     res[0] = b[1] * data[2] + b[2] * data[3] + b[3] * data[4];
@@ -244,8 +276,8 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[15] = b[7] * data[0] + b[4] * data[5] + b[5] * data[6] + b[6] * data[7] + b[3] * data[10] + b[2] * data[9] + b[1] * data[8] + b[0] * data[15];
     return res;
 }
-// ThreeBlade
-[[nodiscard]] MultiVector ThreeBlade::operator* (const MultiVector& b) const
+// TriVector
+[[nodiscard]] MultiVector TriVector::operator* (const MultiVector& b) const
 {
     MultiVector res{};
     res[0] = - b[14] * data[3];
@@ -266,7 +298,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[15] = - b[4] * data[2] - b[3] * data[1] - b[2] * data[0] - b[1] * data[3];
     return res;
 }
-[[nodiscard]] Motor ThreeBlade::operator* (const ThreeBlade& b) const
+[[nodiscard]] Motor TriVector::operator* (const TriVector& b) const
 {
     Motor res{};
     res[0] = -b[3] * data[3];
@@ -279,7 +311,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[7] = 0;
     return res;
 }
-[[nodiscard]] MultiVector ThreeBlade::operator* (const TwoBlade& b) const {
+[[nodiscard]] MultiVector TriVector::operator* (const BiVector& b) const {
     MultiVector res{};
     res[0] = 0;
     res[1] = b[5] * data[2] + b[4] * data[1] + b[3] * data[0];
@@ -299,7 +331,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[15] = 0;
     return res;
 };
-[[nodiscard]] Motor ThreeBlade::operator* (const OneBlade& b) const
+[[nodiscard]] Motor TriVector::operator* (const Vector& b) const
 {
     Motor res{};
     res[0] = 0;
@@ -312,7 +344,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[7] = -b[3] * data[2] - b[2] * data[1] - b[1] * data[0] - b[0] * data[3];
     return res;
 }
-[[nodiscard]] MultiVector ThreeBlade::operator* (const Motor& b) const
+[[nodiscard]] MultiVector TriVector::operator* (const Motor& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -332,8 +364,8 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[15] = 0;
     return res;
 }
-// TwoBlade
-[[nodiscard]] MultiVector TwoBlade::operator* (const MultiVector& b) const {
+// BiVector
+[[nodiscard]] MultiVector BiVector::operator* (const MultiVector& b) const {
     MultiVector res{};
     res[0] = - b[10] * data[5] - b[9] * data[4] - b[8] * data[3];
     res[1] = b[2] * data[0] + b[3] * data[1] + b[4] * data[2] + b[13] * data[5] + b[12] * data[4] + b[11] * data[3];
@@ -353,7 +385,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[15] = b[8] * data[0] + b[9] * data[1] + b[10] * data[2] + b[7] * data[5] + b[6] * data[4] + b[5] * data[3];
     return res;
 };
-[[nodiscard]] MultiVector TwoBlade::operator* (const ThreeBlade& b) const {
+[[nodiscard]] MultiVector BiVector::operator* (const TriVector& b) const {
     MultiVector res{};
     res[0] = 0;
     res[1] = b[2] * data[5] + b[1] * data[4] + b[0] * data[3];
@@ -373,7 +405,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[15] = 0;
     return res;
 };
-[[nodiscard]] Motor TwoBlade::operator* (const TwoBlade& b) const {
+[[nodiscard]] Motor BiVector::operator* (const BiVector& b) const {
     Motor res{};
     res[0] = -b[5] * data[5] - b[4] * data[4] - b[3] * data[3];
     res[1] = - b[5] * data[1] + b[4] * data[2] + b[1] * data[5] - b[2] * data[4];
@@ -385,7 +417,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[7] = b[3] * data[0] + b[4] * data[1] + b[5] * data[2] + b[2] * data[5] + b[1] * data[4] + b[0] * data[3];
     return res;
 };
-[[nodiscard]] MultiVector TwoBlade::operator* (const OneBlade& b) const {
+[[nodiscard]] MultiVector BiVector::operator* (const Vector& b) const {
     MultiVector res{};
     res[1] = b[1] * data[0] + b[2] * data[1] + b[3] * data[2];
     res[2] = b[2] * data[5] - b[3] * data[4];
@@ -397,7 +429,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[14] = b[3] * data[5] + b[2] * data[4] + b[1] * data[3];
     return res;
 };
-[[nodiscard]] Motor TwoBlade::operator* (const Motor& b) const {
+[[nodiscard]] Motor BiVector::operator* (const Motor& b) const {
     Motor res{};
     res[0] = -b[6] * data[5] - b[5] * data[4] - b[4] * data[3];
     res[1] = b[0] * data[0] - b[6] * data[1] + b[5] * data[2] + b[2] * data[5] - b[3] * data[4] - b[7] * data[3];
@@ -409,8 +441,8 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[7] = b[4] * data[0] + b[5] * data[1] + b[6] * data[2] + b[3] * data[5] + b[2] * data[4] + b[1] * data[3];
     return res;
 };
-// OneBlade
-[[nodiscard]] MultiVector OneBlade::operator* (const MultiVector& b) const
+// Vector
+[[nodiscard]] MultiVector Vector::operator* (const MultiVector& b) const
 {
     MultiVector res{};
     res[0] = b[2] * data[1] + b[3] * data[2] + b[4] * data[3];
@@ -431,7 +463,7 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[15] = b[14] * data[0] + b[11] * data[1] + b[12] * data[2] + b[13] * data[3];
     return res;
 }
-[[nodiscard]] Motor OneBlade::operator* (const ThreeBlade& b) const
+[[nodiscard]] Motor Vector::operator* (const TriVector& b) const
 {
     Motor res{};
     res[0] = 0;
@@ -441,10 +473,10 @@ MultiVector& MultiVector::operator=(Motor&& b) noexcept
     res[4] = data[1] * b[3];
     res[5] = data[2] * b[3];
     res[6] = data[3] * b[3];
-    res[7] = -data[3] * b[2] - data[2] * b[1] - data[1] * b[0] - data[0] * b[3];
+    res[7] = data[3] * b[2] + data[2] * b[1] + data[1] * b[0] + data[0] * b[3];
     return res;
 }
-[[nodiscard]] MultiVector OneBlade::operator* (const TwoBlade& b) const {
+[[nodiscard]] MultiVector Vector::operator* (const BiVector& b) const {
 MultiVector res{};
 res[1] = -b[0] * data[1] - b[1] * data[2] - b[2] * data[3];
 res[2] = -b[5] * data[2] + b[4] * data[3];
@@ -456,7 +488,7 @@ res[13] = -b[5] * data[0] + b[1] * data[1] - b[0] * data[2];
 res[14] = b[3] * data[1] + b[4] * data[2] + b[5] * data[3];
 return res;
 };
-[[nodiscard]] Motor OneBlade::operator* (const OneBlade& b) const
+[[nodiscard]] Motor Vector::operator* (const Vector& b) const
 {
     Motor res{};
     res[0] = data[1] * b[1] + data[2] * b[2] + data[3] * b[3];
@@ -469,7 +501,7 @@ return res;
     res[7] = 0;
     return res;
 }
-[[nodiscard]] MultiVector OneBlade::operator* (const Motor& b) const
+[[nodiscard]] MultiVector Vector::operator* (const Motor& b) const
 {
     MultiVector res{};
     res[1] = b[0] * data[0] - b[1] * data[1] - b[2] * data[2] - b[3] * data[3];
@@ -486,25 +518,25 @@ return res;
 [[nodiscard]] MultiVector Motor::operator* (const MultiVector& b) const
 {
     MultiVector res{};
-    res[0] = data[0] * b[0] - data[6] * b[10] - data[5] * b[9] - data[4] * b[8];
-    res[1] = data[0] * b[1] - data[1] * b[2] - data[2] * b[3] - data[3] * b[4] + data[6] * b[13] + data[5] * b[12] + data[4] * b[11] + data[7] * b[14];
-    res[2] = data[0] * b[2] - data[6] * b[3] + data[5] * b[4] - data[4] * b[14];
-    res[3] = data[6] * b[2] + data[0] * b[3] - data[4] * b[4] - data[5] * b[14];
-    res[4] = -data[5] * b[2] + data[4] * b[3] + data[0] * b[4] - data[6] * b[14];
-    res[5] = data[1] * b[0] + data[0] * b[5] - data[6] * b[6] + data[5] * b[7] + data[2] * b[10] - data[3] * b[9] - data[7] * b[8] - data[4] * b[15];
-    res[6] = data[2] * b[0] + data[6] * b[5] + data[0] * b[6] - data[4] * b[7] - data[1] * b[10] - data[7] * b[9] + data[3] * b[8] - data[5] * b[15];
-    res[7] = data[3] * b[0] - data[5] * b[5] + data[4] * b[6] + data[0] * b[7] - data[7] * b[10] + data[1] * b[9] - data[2] * b[8] - data[6] * b[15];
-    res[8] = data[4] * b[0] + data[5] * b[10] - data[6] * b[9] + data[0] * b[8];
-    res[9] = data[5] * b[0] - data[4] * b[10] + data[0] * b[9] + data[6] * b[8];
-    res[10] = data[6] * b[0] + data[0] * b[10] + data[4] * b[9] - data[5] * b[8];
-    res[11] = -data[4] * b[1] + data[7] * b[2] + data[3] * b[3] - data[2] * b[4] + data[5] * b[13] - data[6] * b[12] + data[0] * b[11] + data[1] * b[14];
-    res[12] = -data[5] * b[1] - data[3] * b[2] + data[7] * b[3] + data[1] * b[4] - data[4] * b[13] + data[0] * b[12] + data[6] * b[11] + data[2] * b[14];
-    res[13] = -data[6] * b[1] + data[2] * b[2] - data[1] * b[3] + data[7] * b[4] + data[0] * b[13] + data[4] * b[12] - data[5] * b[11] + data[3] * b[14];
-    res[14] = data[4] * b[2] + data[5] * b[3] + data[6] * b[4] + data[0] * b[14];
-    res[15] = data[7] * b[0] + data[4] * b[5] + data[5] * b[6] + data[6] * b[7] + data[3] * b[10] + data[2] * b[9] + data[1] * b[8] + data[0] * b[15];
+    res[0] = b[0] * data[0] - b[10] * data[6] - b[9] * data[5] - b[8] * data[4];
+    res[1] = b[1] * data[0] + b[2] * data[1] + b[3] * data[2] + b[4] * data[3] + b[13] * data[6] + b[12] * data[5] + b[11] * data[4] - b[14] * data[7];
+    res[2] = b[2] * data[0] + b[3] * data[6] - b[4] * data[5] - b[14] * data[4];
+    res[3] = b[3] * data[0] - b[2] * data[6] - b[14] * data[5] + b[4] * data[4];
+    res[4] = b[4] * data[0] - b[14] * data[6] + b[2] * data[5] - b[3] * data[4];
+    res[5] = b[5] * data[0] + b[0] * data[1] - b[10] * data[2] + b[9] * data[3] + b[6] * data[6] - b[7] * data[5] - b[15] * data[4] - b[8] * data[7];
+    res[6] = b[6] * data[0] + b[10] * data[1] + b[0] * data[2] - b[8] * data[3] - b[5] * data[6] - b[15] * data[5] + b[7] * data[4] - b[9] * data[7];
+    res[7] = b[7] * data[0] - b[9] * data[1] + b[8] * data[2] + b[0] * data[3] - b[15] * data[6] + b[5] * data[5] - b[6] * data[4]  - b[10] * data[7];
+    res[8] = b[8] * data[0] + b[9] * data[6] - b[10] * data[5] + b[0] * data[4];
+    res[9] = b[9] * data[0] - b[8] * data[6] + b[0] * data[5] + b[10] * data[4];
+    res[10] = b[10] * data[0] + b[0] * data[6] + b[8] * data[5] - b[9] * data[4];
+    res[11] = b[11] * data[0] - b[14] * data[1] - b[4] * data[2] + b[3] * data[3] + b[12] * data[6] - b[13] * data[5] - b[1] * data[4] - b[2] * data[7];
+    res[12] = b[12] * data[0] + b[4] * data[1] - b[14] * data[2] - b[2] * data[3] - b[11] * data[6] - b[1] * data[5] + b[13] * data[4] - b[3] * data[7];
+    res[13] = b[13] * data[0] - b[3] * data[1] + b[2] * data[2] - b[14] * data[3] - b[1] * data[6] + b[11] * data[5] - b[12] * data[4] - b[4] * data[7];
+    res[14] = b[14] * data[0] + b[4] * data[6] + b[3] * data[5] + b[2] * data[4];
+    res[15] = b[15] * data[0] + b[8] * data[1] + b[9] * data[2] + b[10] * data[3] + b[7] * data[6] + b[6] * data[5] + b[5] * data[4] + b[0] * data[7];
     return res;
 }
-[[nodiscard]] MultiVector Motor::operator* (const ThreeBlade& b) const
+[[nodiscard]] MultiVector Motor::operator* (const TriVector& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -525,9 +557,9 @@ return res;
     res[15] = 0;
     return res;
 }
-[[nodiscard]] Motor Motor::operator* (const TwoBlade& b) const {
+[[nodiscard]] Motor Motor::operator* (const BiVector& b) const {
     Motor res{};
-    res[0] = -b[5] * data[6] - b[4] * data[5] - b[3] * data[4];
+    res[0] = - b[5] * data[6] - b[4] * data[5] - b[3] * data[4];
     res[1] = b[0] * data[0] - b[5] * data[2] + b[4] * data[3] + b[1] * data[6] - b[2] * data[5] - b[3] * data[7];
     res[2] = b[1] * data[0] + b[5] * data[1] - b[3] * data[3] - b[0] * data[6] + b[2] * data[4] - b[4] * data[7];
     res[3] = b[2] * data[0] - b[4] * data[1] + b[3] * data[2] + b[0] * data[5] - b[1] * data[4] - b[5] * data[7];
@@ -537,17 +569,17 @@ return res;
     res[7] = b[3] * data[1] + b[4] * data[2] + b[5] * data[3] + b[2] * data[6] + b[1] * data[5] + b[0] * data[4];
     return res;
 };
-[[nodiscard]] MultiVector Motor::operator* (const OneBlade& b) const
+[[nodiscard]] MultiVector Motor::operator* (const Vector& b) const
 {
     MultiVector res{};
-    res[1] = data[0] * b[0] - data[1] * b[1] - data[2] * b[2] - data[3] * b[3];
-    res[2] = data[0] * b[1] + data[6] * b[2] - data[5] * b[3];
-    res[3] = -data[6] * b[1] + data[0] * b[2] + data[4] * b[3];
-    res[4] = data[5] * b[1] - data[4] * b[2] + data[0] * b[3];
-    res[11] = -data[4] * b[0] + data[7] * b[1] + data[3] * b[2] - data[2] * b[3];
-    res[12] = -data[5] * b[0] - data[3] * b[1] + data[7] * b[2] + data[1] * b[3];
-    res[13] = -data[6] * b[0] + data[2] * b[1] - data[1] * b[2] + data[7] * b[3];
-    res[14] = data[4] * b[1] + data[5] * b[2] + data[6] * b[3];
+    res[1] = b[0] * data[0] + b[1] * data[1] + b[2] * data[2] + b[3] * data[3];
+    res[2] = b[1] * data[0] + b[2] * data[6] - b[3] * data[5];
+    res[3] = b[2] * data[0] - b[1] * data[6] + b[3] * data[4];
+    res[4] = b[3] * data[0] + b[1] * data[5] - b[2] * data[4];
+    res[11] = - b[3] * data[2] + b[2] * data[3] - b[0] * data[4] - b[1] * data[7];
+    res[12] = b[3] * data[1] - b[1] * data[3] - b[0] * data[5] - b[2] * data[7];
+    res[13] = - b[2] * data[1] + b[1] * data[2] - b[0] * data[6] - b[3] * data[7];
+    res[14] = b[3] * data[6] + b[2] * data[5] + b[1] * data[4];
     return res;
 }
 [[nodiscard]] Motor Motor::operator* (const Motor& b) const {
@@ -587,7 +619,7 @@ return res;
     res[15] = b[15] * data[0] + b[0] * data[15];
     return res;
 };
-[[nodiscard]] MultiVector MultiVector::operator| (const ThreeBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator| (const TriVector& b) const
 {
     MultiVector res{};
     res[0] = - b[3] * data[14];
@@ -608,7 +640,7 @@ return res;
     res[15] = 0;
     return res;
 };
-[[nodiscard]] MultiVector MultiVector::operator| (const TwoBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator| (const BiVector& b) const
 {
     MultiVector res{};
     res[0] = - b[5] * data[10] - b[4] * data[9] - b[3] * data[8];
@@ -629,7 +661,7 @@ return res;
     res[15] = 0;
     return res;
 };
-[[nodiscard]] MultiVector MultiVector::operator| (const OneBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator| (const Vector& b) const
 {
     MultiVector res{};
     res[0] = b[1] * data[2] + b[2] * data[3] + b[3] * data[4];
@@ -671,8 +703,8 @@ return res;
     res[15] = b[0] * data[15];
     return res;
 };
-// ThreeBlade
-[[nodiscard]] MultiVector ThreeBlade::operator| (const MultiVector& b) const
+// TriVector
+[[nodiscard]] MultiVector TriVector::operator| (const MultiVector& b) const
 {
     MultiVector res{};
     res[0] = -data[3] * b[14];
@@ -693,22 +725,22 @@ return res;
     res[15] = 0;
     return res;
 };
-[[nodiscard]] float ThreeBlade::operator| (const ThreeBlade & b) const
+[[nodiscard]] float TriVector::operator| (const TriVector & b) const
 {
     return -data[3] * b[3];
 };
-[[nodiscard]] OneBlade ThreeBlade::operator| (const TwoBlade& b) const
+[[nodiscard]] Vector TriVector::operator| (const BiVector& b) const
 {
-    OneBlade res{};
+    Vector res{};
     res[0] = data[2] * b[5] + data[1] * b[4] + data[0] * b[3];
     res[1] = -data[3] * b[3];
     res[2] = -data[3] * b[4];
     res[3] = -data[3] * b[5];
     return res;
 };
-[[nodiscard]] TwoBlade ThreeBlade::operator| (const OneBlade& b) const
+[[nodiscard]] BiVector TriVector::operator| (const Vector& b) const
 {
-    TwoBlade res{};
+    BiVector res{};
     res[0] = -data[2] * b[2] + data[1] * b[3];
     res[1] = data[2] * b[1] - data[0] * b[3];
     res[2] = -data[1] * b[1] + data[0] * b[2];
@@ -717,17 +749,17 @@ return res;
     res[5] = data[3] * b[3];
     return res;
 };
-[[nodiscard]] OneBlade ThreeBlade::operator| (const Motor& b) const
+[[nodiscard]] Vector TriVector::operator| (const Motor& b) const
 {
-    OneBlade res{};
+    Vector res{};
     res[0] = data[2] * b[6] + data[1] * b[5] + data[0] * b[4] - data[3] * b[7];
     res[1] = -data[3] * b[4];
     res[2] = -data[3] * b[5];
     res[3] = -data[3] * b[6];
     return res;
 };
-// TwoBlade
-[[nodiscard]] MultiVector TwoBlade::operator| (const MultiVector& b) const
+// BiVector
+[[nodiscard]] MultiVector BiVector::operator| (const MultiVector& b) const
 {
     MultiVector res{};
     res[0] = -data[5] * b[10] - data[4] * b[9] - data[3] * b[8];
@@ -748,29 +780,29 @@ return res;
     res[15] = 0;
     return res;
 };
-[[nodiscard]] OneBlade TwoBlade::operator| (const ThreeBlade& b) const
+[[nodiscard]] Vector BiVector::operator| (const TriVector& b) const
 {
-    OneBlade res{};
+    Vector res{};
     res[0] = data[5] * b[2] + data[4] * b[1] + data[3] * b[0];
     res[1] = - data[3] * b[3];
     res[2] = - data[4] * b[3];
     res[3] = - data[5] * b[3];
     return res;
 };
-[[nodiscard]] float TwoBlade::operator| (const TwoBlade& b) const
+[[nodiscard]] float BiVector::operator| (const BiVector& b) const
 {
     return -b[5] * data[5] - b[4] * data[4] - b[3] * data[3];
 };
-[[nodiscard]] OneBlade TwoBlade::operator| (const OneBlade& b) const
+[[nodiscard]] Vector BiVector::operator| (const Vector& b) const
 {
-    OneBlade res{};
+    Vector res{};
     res[0] = -data[0] * b[1] - data[1] * b[2] - data[2] * b[3];
     res[1] = -data[5] * b[2] + data[4] * b[3];
     res[2] = data[5] * b[1] - data[3] * b[3];
     res[3] = -data[4] * b[1] + data[3] * b[2];
     return res;
 };
-[[nodiscard]] Motor TwoBlade::operator| (const Motor& b) const
+[[nodiscard]] Motor BiVector::operator| (const Motor& b) const
 {
     Motor res{};
     res[0] = -data[5] * b[6] - data[4] * b[5] - data[3] * b[4];
@@ -783,7 +815,7 @@ return res;
     return res;
 };
 // Oneblade
-[[nodiscard]] MultiVector OneBlade::operator| (const MultiVector& b) const
+[[nodiscard]] MultiVector Vector::operator| (const MultiVector& b) const
 {
     MultiVector res{};
     res[0] = data[1] * b[2] + data[2] * b[3] + data[3] * b[4];
@@ -804,9 +836,9 @@ return res;
     res[15] = 0;
     return res;
 };
-[[nodiscard]] TwoBlade OneBlade::operator| (const ThreeBlade& b) const
+[[nodiscard]] BiVector Vector::operator| (const TriVector& b) const
 {
-    TwoBlade res{};
+    BiVector res{};
     res[0] = -data[2] * b[2] + data[3] * b[1];
     res[1] = data[1] * b[2] - data[3] * b[0];
     res[2] = -data[1] * b[1] + data[2] * b[0];
@@ -815,20 +847,20 @@ return res;
     res[3] = data[1] * b[3];
     return res;
 };
-[[nodiscard]] OneBlade OneBlade::operator| (const TwoBlade& b) const
+[[nodiscard]] Vector Vector::operator| (const BiVector& b) const
 {
-    OneBlade res{};
+    Vector res{};
     res[0] = -b[0] * data[1] - b[1] * data[2] - b[2] * data[3];
     res[1] = -b[5] * data[2] + b[4] * data[3];
     res[2] = b[5] * data[1] - b[3] * data[3];
     res[3] = -b[4] * data[1] + b[3] * data[2];
     return res;
 }
-[[nodiscard]] float OneBlade::operator| (const OneBlade& b) const
+[[nodiscard]] float Vector::operator| (const Vector& b) const
 {
     return data[1] * b[1] + data[2] * b[2] + data[3] * b[3];
 };
-[[nodiscard]] MultiVector OneBlade::operator| (const Motor& b) const
+[[nodiscard]] MultiVector Vector::operator| (const Motor& b) const
 {
     MultiVector res{};
     res[1] = data[0] * b[0] + data[1] * b[1] + data[2] * b[2] + data[3] * b[3];
@@ -862,7 +894,7 @@ return res;
     res[15] = data[0] * b[15];
     return res;
 };
-[[nodiscard]] MultiVector Motor::operator| (const ThreeBlade& b) const
+[[nodiscard]] MultiVector Motor::operator| (const TriVector& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -883,7 +915,7 @@ return res;
     res[15] = 0;
     return res;
 };
-[[nodiscard]] Motor Motor::operator| (const TwoBlade& b) const
+[[nodiscard]] Motor Motor::operator| (const BiVector& b) const
 {
     Motor res{};
     res[0] = - data[6] * b[5] - data[5] * b[4] - data[4] * b[3];
@@ -896,7 +928,7 @@ return res;
     res[7] = 0;
     return res;
 };
-[[nodiscard]] MultiVector Motor::operator| (const OneBlade& b) const
+[[nodiscard]] MultiVector Motor::operator| (const Vector& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -955,7 +987,7 @@ return res;
     res[15] = b[15] * data[0] + b[14] * data[1] + b[11] * data[2] + b[12] * data[3] + b[13] * data[4] + b[8] * data[5] + b[9] * data[6] + b[10] * data[7] + b[7] * data[10] + b[6] * data[9] + b[5] * data[8] - b[4] * data[13] - b[3] * data[12] - b[2] * data[11] - b[1] * data[14] + b[0] * data[15];
     return res;
 }
-[[nodiscard]] MultiVector MultiVector::operator^(const ThreeBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator^(const TriVector& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -976,7 +1008,7 @@ return res;
     res[15] = b[3] * data[1] + b[0] * data[2] + b[1] * data[3] + b[2] * data[4];
     return res;
 }
-[[nodiscard]] MultiVector MultiVector::operator^(const TwoBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator^(const BiVector& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -997,7 +1029,7 @@ return res;
     res[15] = b[3] * data[5] + b[4] * data[6] + b[5] * data[7] + b[2] * data[10] + b[1] * data[9] + b[0] * data[8];
     return res;
 }
-[[nodiscard]] MultiVector MultiVector::operator^(const OneBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator^(const Vector& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -1039,8 +1071,8 @@ return res;
     res[15] = b[7] * data[0] + b[4] * data[5] + b[5] * data[6] + b[6] * data[7] + b[3] * data[10] + b[2] * data[9] + b[1] * data[8] + b[0] * data[15];
     return res;
 }
-// ThreeBlade
-[[nodiscard]] MultiVector ThreeBlade::operator^(const MultiVector& b) const
+// TriVector
+[[nodiscard]] MultiVector TriVector::operator^(const MultiVector& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -1061,29 +1093,29 @@ return res;
     res[15] = data[3] * b[1] + data[0] * b[2] + data[1] * b[3] + data[2] * b[4];
     return res;
 }
-[[nodiscard]] GANull ThreeBlade::operator^(const ThreeBlade& b) const
+[[nodiscard]] GANull TriVector::operator^(const TriVector&) const
 {
     return GANull{};
 }
-[[nodiscard]] GANull ThreeBlade::operator^(const TwoBlade& b) const
+[[nodiscard]] GANull TriVector::operator^(const BiVector&) const
 {
     return GANull{};
 }
-[[nodiscard]] float ThreeBlade::operator^(const OneBlade& b) const
+[[nodiscard]] float TriVector::operator^(const Vector& b) const
 {
     return data[3] * b[0] + data[0] * b[1] + data[1] * b[2] + data[2] * b[3];
 }
-[[nodiscard]] ThreeBlade ThreeBlade::operator^(const Motor& b) const
+[[nodiscard]] TriVector TriVector::operator^(const Motor& b) const
 {
-    ThreeBlade res{};
+    TriVector res{};
     res[2] = data[2] * b[0];
     res[1] = data[1] * b[0];
     res[0] = data[0] * b[0];
     res[3] = data[3] * b[0];
     return res;
 }
-// TwoBlade
-[[nodiscard]] MultiVector TwoBlade::operator^(const MultiVector& b) const
+// BiVector
+[[nodiscard]] MultiVector BiVector::operator^(const MultiVector& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -1104,26 +1136,26 @@ return res;
     res[15] = data[3] * b[5] + data[4] * b[6] + data[5] * b[7] + data[2] * b[10] + data[1] * b[9] + data[0] * b[8];
     return res;
 }
-[[nodiscard]] GANull TwoBlade::operator^(const ThreeBlade& b) const
+[[nodiscard]] GANull BiVector::operator^(const TriVector&) const
 {
     return GANull{};
 }
-[[nodiscard]] MultiVector TwoBlade::operator ^ (const TwoBlade& b) const
+[[nodiscard]] MultiVector BiVector::operator ^ (const BiVector& b) const
 {
     MultiVector res{};
     res[15] = data[0] + b[4] * data[1] + b[5] * data[2] + b[2] * data[5] + b[1] * data[4] + b[0] * data[3];
     return res;
 }
-[[nodiscard]] ThreeBlade TwoBlade::operator^(const OneBlade& b) const
+[[nodiscard]] TriVector BiVector::operator^(const Vector& b) const
 {
-    ThreeBlade res{};
+    TriVector res{};
     res[2] = -data[5] * b[0] + data[1] * b[1] - data[0] * b[2];
     res[1] = -data[4] * b[0] - data[2] * b[1] + data[0] * b[3];
     res[0] = -data[3] * b[0] + data[2] * b[2] - data[1] * b[3];
     res[3] = data[3] * b[1] + data[4] * b[2] + data[5] * b[3];
     return res;
 }
-[[nodiscard]] Motor TwoBlade::operator^(const Motor& b) const
+[[nodiscard]] Motor BiVector::operator^(const Motor& b) const
 {
     Motor res{};
     res[0] = 0;
@@ -1137,28 +1169,28 @@ return res;
     return res;
 }
 // Oneblade
-[[nodiscard]] MultiVector OneBlade::operator^(const MultiVector& b) const
+[[nodiscard]] MultiVector Vector::operator^(const MultiVector& b) const
 {
     MultiVector res{};
     res[0] = 0;
-    res[1] = data[0] * b[0];
-    res[2] = data[1] * b[0];
-    res[3] = data[2] * b[0];
-    res[4] = data[3] * b[0];
-    res[5] = data[1] * b[1] - data[0] * b[2];
-    res[6] = data[2] * b[1] - data[0] * b[3];
-    res[7] = data[3] * b[1] - data[0] * b[4];
-    res[10] = data[2] * b[2] - data[1] * b[3];
-    res[9] = -data[3] * b[2] + data[1] * b[4];
-    res[8] = data[3] * b[3] - data[2] * b[4];
-    res[13] = -data[2] * b[5] + data[1] * b[6] - data[0] * b[10];
-    res[12] = data[3] * b[5] - data[1] * b[7] - data[0] * b[9];
-    res[11] = -data[3] * b[6] + data[2] * b[7] - data[0] * b[8];
-    res[14] = data[3] * b[10] + data[2] * b[9] + data[1] * b[8];
-    res[15] = -data[3] * b[13] - data[2] * b[12] - data[1] * b[11] - data[0] * b[14];
+    res[1] = b[0] * data[0];
+    res[2] = b[0] * data[1];
+    res[3] = b[0] * data[2];
+    res[4] = b[0] * data[3];
+    res[5] = b[2] * data[0] - b[1] * data[1];
+    res[6] = b[3] * data[0] - b[1] * data[2];
+    res[7] = b[4] * data[0] - b[1] * data[3];
+    res[10] = b[3] * data[1] - b[2] * data[2];
+    res[9] = - b[4] * data[1] + b[2] * data[3];
+    res[8] = b[4] * data[2] - b[3] * data[3];
+    res[13] = - b[10] * data[0] + b[6] * data[1] - b[5] * data[2];
+    res[12] = - b[9] * data[0] - b[7] * data[1] + b[5] * data[3];
+    res[11] = - b[8] * data[0] + b[7] * data[2] - b[6] * data[3];
+    res[14] = b[8] * data[1] + b[9] * data[2] + b[10] * data[3];
+    res[15] = b[14] * data[0] + b[11] * data[1] + b[12] * data[2] + b[13] * data[3];
     return res;
 }
-[[nodiscard]] MultiVector OneBlade::operator^(const ThreeBlade& b) const
+[[nodiscard]] MultiVector Vector::operator^(const TriVector& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -1179,27 +1211,27 @@ return res;
     res[15] = -data[3] * b[2] - data[2] * b[1] - data[1] * b[0] - data[0] * b[3];
     return res;
 }
-[[nodiscard]] ThreeBlade OneBlade::operator^ (const TwoBlade& b) const
+[[nodiscard]] TriVector Vector::operator^ (const BiVector& b) const
 {
-    ThreeBlade res{};
+    TriVector res{};
     res[2] = -b[5] * data[0] + b[1] * data[1] - b[0] * data[2];
     res[1] = -b[4] * data[0] - b[2] * data[1] + b[0] * data[3];
     res[0] = -b[3] * data[0] + b[2] * data[2] - b[1] * data[3];
     res[3] = b[3] * data[1] + b[4] * data[2] + b[5] * data[3];
     return res;
 }
-[[nodiscard]] TwoBlade OneBlade::operator^(const OneBlade& b) const
+[[nodiscard]] BiVector Vector::operator^(const Vector& b) const
 {
-    TwoBlade res{};
-    res[0] = data[1] * b[0] - data[0] * b[1];
-    res[1] = data[2] * b[0] - data[0] * b[2];
-    res[2] = data[3] * b[0] - data[0] * b[3];
-    res[5] = data[2] * b[1] - data[1] * b[2];
-    res[4] = -data[3] * b[1] + data[1] * b[3];
-    res[3] = data[3] * b[2] - data[2] * b[3];
+    BiVector res{};
+    res[0] = b[1] * data[0] - b[0] * data[1];
+    res[1] = b[2] * data[0] - b[0] * data[2];
+    res[2] = b[3] * data[0] - b[0] * data[3];
+    res[5] = b[2] * data[1] - b[1] * data[2];
+    res[4] = -b[3] * data[1] + b[1] * data[3];
+    res[3] = b[3] * data[2] - b[2] * data[3];
     return res;
 }
-[[nodiscard]] MultiVector OneBlade::operator^(const Motor& b) const
+[[nodiscard]] MultiVector Vector::operator^(const Motor& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -1242,16 +1274,16 @@ return res;
     res[15] = data[7] * b[0] + data[4] * b[5] + data[5] * b[6] + data[6] * b[7] + data[3] * b[10] + data[2] * b[9] + data[1] * b[8] + data[0] * b[15];
     return res;
 }
-[[nodiscard]] ThreeBlade Motor::operator^(const ThreeBlade& b) const
+[[nodiscard]] TriVector Motor::operator^(const TriVector& b) const
 {
-    ThreeBlade res{};
+    TriVector res{};
     res[2] = data[0] * b[2];
     res[1] = data[0] * b[1];
     res[0] = data[0] * b[0];
     res[3] = data[0] * b[3];
     return res;
 }
-[[nodiscard]] Motor Motor::operator^(const TwoBlade& b) const
+[[nodiscard]] Motor Motor::operator^(const BiVector& b) const
 {
     Motor res{};
     res[0] = 0;
@@ -1264,7 +1296,7 @@ return res;
     res[7] = data[4] * b[0] + data[5] * b[1] + data[6] * b[2] + data[3] * b[5] + data[2] * b[4] + data[1] * b[3];
     return res;
 }
-[[nodiscard]] MultiVector Motor::operator^(const OneBlade& b) const
+[[nodiscard]] MultiVector Motor::operator^(const Vector& b) const
 {
     MultiVector res{};
     res[0] = 0;
@@ -1331,7 +1363,7 @@ return res;
     res[0] = b[0] * data[15] - b[1] * data[14] - b[2] * data[11] - b[3] * data[12] - b[4] * data[13] + b[5] * data[8] + b[6] * data[9] + b[7] * data[10] + b[10] * data[7] + b[9] * data[6] + b[8] * data[5] + b[13] * data[4] + b[12] * data[3] + b[11] * data[2] + b[14] * data[1] + b[15] * data[0];
     return res;
 }
-[[nodiscard]] MultiVector MultiVector::operator& (const ThreeBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator& (const TriVector& b) const
 {
     MultiVector res{};
     res[14] = b[3] * data[15];
@@ -1351,7 +1383,7 @@ return res;
     res[0] = b[2] * data[4] + b[1] * data[3] + b[0] * data[2] + b[3] * data[1];
     return res;
 }
-[[nodiscard]] MultiVector MultiVector::operator& (const TwoBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator& (const BiVector& b) const
 {
     MultiVector res{};
     res[8] = b[8] * data[15];
@@ -1367,7 +1399,7 @@ return res;
     res[0] = b[5] * data[8] + b[6] * data[9] + b[7] * data[10] + b[10] * data[7] + b[9] * data[6] + b[8] * data[5];
     return res;
 }
-[[nodiscard]] MultiVector MultiVector::operator& (const OneBlade& b) const
+[[nodiscard]] MultiVector MultiVector::operator& (const Vector& b) const
 {
     MultiVector res{};
     res[15] = 0;
@@ -1409,8 +1441,9 @@ return res;
     res[0] = b[0] * data[15] + b[1] * data[8] + b[2] * data[9] + b[3] * data[10] + b[6] * data[7] + b[5] * data[6] + b[4] * data[5] + b[7] * data[0];
     return res;
 }
-// ThreeBlade
-[[nodiscard]] MultiVector ThreeBlade::operator& (const MultiVector& b) const
+
+// TriVector
+[[nodiscard]] MultiVector TriVector::operator& (const MultiVector& b) const
 {
     MultiVector res{};
     res[15] = 0;
@@ -1431,9 +1464,9 @@ return res;
     res[0] = data[2] * b[4] + data[1] * b[3] + data[0] * b[2] + data[3] * b[1];
     return res;
 }
-[[nodiscard]] TwoBlade ThreeBlade::operator& (const ThreeBlade& b) const
+[[nodiscard]] BiVector TriVector::operator& (const TriVector& b) const
 {
-    TwoBlade res{};
+    BiVector res{};
     res[0] = b[2] * data[1] - b[1] * data[2];
     res[1] = -b[2] * data[0] + b[0] * data[2];
     res[2] = b[1] * data[0] - b[0] * data[1];
@@ -1442,20 +1475,20 @@ return res;
     res[5] = b[2] * data[3] - b[3] * data[2];
     return res;
 }
-[[nodiscard]] OneBlade ThreeBlade::operator& (const TwoBlade& b) const
+[[nodiscard]] Vector TriVector::operator& (const BiVector& b) const
 {
-    OneBlade res{};
+    Vector res{};
     res[3] = data[1] * b[3] - data[0] * b[4] + data[3] * b[2];
     res[2] = -data[2] * b[3] + data[0] * b[5] + data[3] * b[1];
     res[1] = data[2] * b[4] - data[1] * b[5] + data[3] * b[0];
     res[0] = -data[2] * b[2] - data[1] * b[1] - data[0] * b[0];
     return res;
 }
-[[nodiscard]] float ThreeBlade::operator& (const OneBlade& b) const
+[[nodiscard]] float TriVector::operator& (const Vector& b) const
 {
     return data[2] * b[3] + data[1] * b[2] + data[0] * b[1] + data[3] * b[0];
 }
-[[nodiscard]] MultiVector ThreeBlade::operator& (const Motor& b) const
+[[nodiscard]] MultiVector TriVector::operator& (const Motor& b) const
 {
     MultiVector res{};
     res[15] = 0;
@@ -1476,8 +1509,9 @@ return res;
     res[0] = 0;
     return res;
 }
-// TwoBlade
-[[nodiscard]] MultiVector TwoBlade::operator& (const MultiVector& b) const
+
+// BiVector
+[[nodiscard]] MultiVector BiVector::operator& (const MultiVector& b) const
 {
     MultiVector res{};
     res[15] = 0;
@@ -1498,24 +1532,24 @@ return res;
     res[0] = b[5] * data[3] + b[6] * data[4] + b[7] * data[5] + b[10] * data[2] + b[9] * data[1] + b[8] * data[0];
     return res;
 }
-[[nodiscard]] OneBlade TwoBlade::operator& (const ThreeBlade& b) const
+[[nodiscard]] Vector BiVector::operator& (const TriVector& b) const
 {
-    OneBlade res{};
+    Vector res{};
     res[3] = b[1] * data[3] - b[0] * data[4] + b[3] * data[2];
     res[2] = b[2] * data[3] + b[0] * data[5] + b[3] * data[1];
     res[1] = b[2] * data[4] - b[1] * data[5] + b[3] * data[0];
     res[0] = -b[2] * data[2] - b[1] * data[1] - b[0] * data[0];
     return res;
 }
-[[nodiscard]] float TwoBlade::operator& (const TwoBlade& b) const
+[[nodiscard]] float BiVector::operator& (const BiVector& b) const
 {
     return b[0] * data[3] + b[1] * data[4] + b[2] * data[5] + b[5] * data[2] + b[4] * data[1] + b[3] * data[0];
 }
-[[nodiscard]] GANull TwoBlade::operator& (const OneBlade& b) const
+[[nodiscard]] GANull BiVector::operator& (const Vector&) const
 {
     return GANull{};
 }
-[[nodiscard]] MultiVector TwoBlade::operator& (const Motor& b) const
+[[nodiscard]] MultiVector BiVector::operator& (const Motor& b) const
 {
     MultiVector res{};
     res[15] = 0;
@@ -1536,8 +1570,9 @@ return res;
     res[0] = b[1] * data[3] + b[2] * data[4] + b[3] * data[5] + b[6] * data[2] + b[5] * data[1] + b[4] * data[0];
     return res;
 }
+
 // Oneblade
-[[nodiscard]] MultiVector OneBlade::operator& (const MultiVector& b) const
+[[nodiscard]] MultiVector Vector::operator& (const MultiVector& b) const
 {
     MultiVector res{};
     res[15] = 0;
@@ -1558,27 +1593,28 @@ return res;
     res[0] = b[13] * data[3] + b[12] * data[2] + b[11] * data[1] + b[14] * data[0];
     return res;
 }
-[[nodiscard]] float OneBlade::operator& (const ThreeBlade& b) const
+[[nodiscard]] float Vector::operator& (const TriVector& b) const
 {
     return b[2] * data[3] + b[1] * data[2] + b[0] * data[1] + b[3] * data[0];
 }
-[[nodiscard]] GANull OneBlade::operator& (const TwoBlade& b) const
+[[nodiscard]] GANull Vector::operator& (const BiVector&) const
 {
     return GANull{};
 }
-[[nodiscard]] GANull OneBlade::operator& (const OneBlade& b) const
+[[nodiscard]] GANull Vector::operator& (const Vector&) const
 {
     return GANull{};
 }
-[[nodiscard]] OneBlade OneBlade::operator& (const Motor& b) const
+[[nodiscard]] Vector Vector::operator& (const Motor& b) const
 {
-    OneBlade res{};
+    Vector res{};
     res[3] = b[7] * data[3];
     res[2] = b[7] * data[2];
     res[1] = b[7] * data[1];
     res[0] = b[7] * data[0];
     return res;
 }
+
 // Motor
 [[nodiscard]] MultiVector Motor::operator& (const MultiVector& b) const
 {
@@ -1601,7 +1637,7 @@ return res;
     res[0] = b[0] * data[7] + b[5] * data[4] + b[6] * data[5] + b[7] * data[6] + b[10] * data[3] + b[9] * data[2] + b[8] * data[1] + b[15] * data[0];
     return res;
 }
-[[nodiscard]] MultiVector Motor::operator& (const ThreeBlade& b) const
+[[nodiscard]] MultiVector Motor::operator& (const TriVector& b) const
 {
     MultiVector res{};
     res[15] = 0;
@@ -1622,7 +1658,7 @@ return res;
     res[0] = b[15] * data[0];
     return res;
 }
-[[nodiscard]] Motor Motor::operator& (const TwoBlade& b) const
+[[nodiscard]] Motor Motor::operator& (const BiVector& b) const
 {
     Motor res{};
     res[15] = 0;
@@ -1635,9 +1671,9 @@ return res;
     res[0] = b[0] * data[4] + b[1] * data[5] + b[2] * data[6] + b[5] * data[3] + b[4] * data[2] + b[3] * data[1];
     return res;
 }
-[[nodiscard]] OneBlade Motor::operator& (const OneBlade& b) const
+[[nodiscard]] Vector Motor::operator& (const Vector& b) const
 {
-    OneBlade res{};
+    Vector res{};
     res[3] = b[3] * data[7];
     res[2] = b[2] * data[7];
     res[1] = b[1] * data[7];
@@ -1661,7 +1697,7 @@ return res;
 // Dual operator
 [[nodiscard]] MultiVector MultiVector::operator! () const
 {
-    return MultiVector(
+    return {
         data[15],
         data[14],
         data[11],
@@ -1678,30 +1714,30 @@ return res;
         data[4],
         data[1],
         data[0]
-    );
+    };
 }
-[[nodiscard]] OneBlade ThreeBlade::operator! () const
+[[nodiscard]] Vector TriVector::operator! () const
 {
-    return OneBlade(data[3], data[0], data[1], data[2]);
+    return {data[3], data[0], data[1], data[2]};
 }
-[[nodiscard]] TwoBlade TwoBlade::operator! () const
+[[nodiscard]] BiVector BiVector::operator! () const
 {
-    return TwoBlade(
+    return {
         data[3],
         data[4],
         data[5],
         data[0],
         data[1],
         data[2]
-    );
+    };
 }
-[[nodiscard]] ThreeBlade OneBlade::operator! () const
+[[nodiscard]] TriVector Vector::operator! () const
 {
-    return ThreeBlade(data[1], data[2], data[3], data[0]);
+    return {data[1], data[2], data[3], data[0]};
 }
 [[nodiscard]] Motor Motor::operator! () const
 {
-    return Motor(
+    return {
         data[7],
         data[4],
         data[5],
@@ -1710,5 +1746,175 @@ return res;
         data[2],
         data[3],
         data[0]
-    );
+    };
+}
+
+// Exponential method
+// MultiVector Gexp(const MultiVector& m)
+// {
+    /*
+    MultiVector res{};
+
+    // Vector
+    float vectorNorm{m.Grade1().Norm()};
+    if (vectorNorm != 0)
+    {
+        float factor{sinh(vectorNorm) / vectorNorm};
+        res[0] = cosh(vectorNorm);
+        res[1] = m[1] * factor;
+        res[2] = m[2] * factor;
+        res[3] = m[3] * factor;
+        res[4] = m[4] * factor;
+    } else
+    {
+        res[0] = 1;
+    }
+
+    // BiVector
+    float bivectorNorm{m.Grade2().Norm()};
+    if (bivectorNorm != 0)
+    {
+        float factor{sin(bivectorNorm) / bivectorNorm};
+        float cosBivector{cos(bivectorNorm)};
+        res = res * Motor{
+            cosBivector,
+            0,
+            0,
+            0,
+            m[8] * factor,
+            m[9] * factor,
+            m[10] * factor,
+            0
+        } * Motor{
+        1, m[5], m[6], m[7], 0, 0, 0, 0};
+    }
+
+    // TriVector
+    float trivectorNorm{m.Grade3().Norm()};
+    if (trivectorNorm != 0)
+    {
+        float factor{sin(trivectorNorm) / trivectorNorm};
+        res = res * MultiVector{
+            cos(trivectorNorm),
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            m[11] * factor,
+            m[12] * factor,
+            m[13] * factor,
+            m[14] * factor,
+            0
+        };
+    }
+
+    // Pseudoscalar
+    if (m[15] != 0)
+    {
+        res = res * Motor{1, 0, 0, 0, 0, 0, 0, m[15]};
+        /*
+        res[1] += m[15] * res[14];
+        res[5] -= m[15] * res[8];
+        res[6] -= m[15] * res[9];
+        res[7] -= m[15] * res[10];
+        res[11] += m[15] * res[2];
+        res[12] += m[15] * res[3];
+        res[13] += m[15] * res[4];
+        res[15] += m[15] * res[0];
+    }
+
+    // Scalar
+    if (m[0] != 0)
+    {
+        return res * std::exp(m[0]);
+    }
+    */
+
+    // Taylor expansion
+/*
+    MultiVector one{1};
+    MultiVector square{m * m};
+    MultiVector cubic{square * m};
+    MultiVector quartic{cubic * m};
+    MultiVector quintic{quartic * m};
+
+    return (quintic / 120);
+}
+*/
+
+[[nodiscard]] MultiVector Vector::Gexp() const
+{
+    float vectorNorm{this->Norm()};
+    MultiVector res{};
+    if (vectorNorm != 0)
+    {
+        float factor{sinh(vectorNorm) / vectorNorm};
+        res[0] = cosh(vectorNorm);
+        res[1] = data[0] * factor;
+        res[2] = data[1] * factor;
+        res[3] = data[2] * factor;
+        res[4] = data[3] * factor;
+    } else
+    {
+        res[0] = 1;
+    }
+    return res;
+}
+
+/*
+[[nodiscard]] Motor BiVector::Gexp() const
+{
+    /*
+    float bivectorNorm{this->Norm()};
+    Motor res{};
+
+    if (bivectorNorm != 0)
+    {
+        float factor{sin(bivectorNorm) / bivectorNorm};
+        float cosBivector{cos(bivectorNorm)};
+        res = Motor{
+            1, data[0], data[1], data[2], 0, 0, 0, 0} * Motor{
+            cosBivector,
+            0,
+            0,
+            0,
+            data[3] * factor,
+            data[4] * factor,
+            data[5] * factor,
+            0
+        };
+    }
+
+    float bivectorNormSquared{data[3] * data[3] + data[4] * data[4] + data[5] * data[5]};
+
+    // No rotation
+    if (bivectorNormSquared == 1)
+    {
+        return Motor{1, data[0], data[1], data[2], 0, 0, 0, 0};
+    }
+
+    float m{data[0]*data[5] + data[1] * data[4] + data[2] * data[3]};
+    float bivectorNorm{sqrt(bivectorNormSquared)}, cosine{cos(bivectorNorm)}, sine{sin(bivectorNorm) / bivectorNorm},
+    distance{m/bivectorNormSquared * (cosine - sine)};
+    return Motor{cosine, sine*data[0] + distance*data[5], sine*data[1] + distance*data[4], sine*data[2] + distance*data[3], sine*data[3], sine*data[4], sine*data[5], m*sine};
+}
+*/
+
+[[nodiscard]] MultiVector TriVector::Gexp() const
+{
+    float trivectorNorm{this->Norm()};
+    MultiVector res{};
+
+    if (trivectorNorm != 0)
+    {
+        float factor{sin(trivectorNorm) / trivectorNorm};
+        res = MultiVector{
+            cos(trivectorNorm),
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            data[0] * factor,
+            data[1] * factor,
+            data[2] * factor,
+            data[3] * factor,
+            0
+        };
+    }
+
+    return res;
 }

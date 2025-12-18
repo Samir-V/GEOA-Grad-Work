@@ -5,7 +5,7 @@
 
 struct Plane
 {
-	OneBlade PlaneGenerators;
+	Vector PlaneGenerators;
 	Color4f Color;
 };
 
@@ -19,11 +19,11 @@ struct LightRay
 	
 };
 
-inline bool HitPlane(const TwoBlade& line, const Plane& plane, const Camera* pCamera, float& outDistance)
+inline bool HitPlane(const BiVector& line, const Plane& plane, const Camera* pCamera, float& outDistance)
 {
 	const auto hit = line ^ plane.PlaneGenerators;
 
-	if (hit.IsZero() || hit[3] < 0.0f)
+	if (hit[3] < 0.0f)
 	{
 		return false;
 	}

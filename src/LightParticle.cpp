@@ -1,6 +1,6 @@
 #include "LightParticle.h"
 
-LightParticle::LightParticle(ThreeBlade position, TwoBlade velocity, double e) :
+LightParticle::LightParticle(TriVector position, BiVector velocity, double e) :
 	m_Position{ std::move(position) },
 	m_Velocity{ std::move(velocity) },
 	m_State{ LightState::MOVING },

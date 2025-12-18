@@ -13,7 +13,7 @@
 #include "utils.h"
 #include "structs.h"
 #include "Camera.h"
-	#include "GEOAUtils.h"
+#include "GEOAUtils.h"
 
 Renderer::Renderer(const Window& window)
 	: m_Window{ window }
@@ -113,14 +113,14 @@ void Renderer::InitializeRenderer()
 	SDL_GetWindowSize(m_pWindow, &m_Width, &m_Height);
 	m_pBufferPixels = static_cast<uint32_t*>(m_pBuffer->pixels);
 
-	m_CameraUPtr = std::make_unique<Camera>(ThreeBlade(0.f, 0.f, 0.f), 60.f);
+	m_CameraUPtr = std::make_unique<Camera>(TriVector(0.f, 0.f, 0.f), 60.f);
 
 	m_Initialized = true;
 
 	m_TestPlane = Plane();
 
 	m_TestPlane.Color = Color4f{0.4f, 0.1f, 0.8f, 1.0f};
-	m_TestPlane.PlaneGenerators = OneBlade{5.0f, 0, 0, 1}.Normalized();
+	m_TestPlane.PlaneGenerators = Vector{5.0f, 0, 0, 1}.Normalized();
 
 }
 
@@ -224,7 +224,7 @@ void Renderer::CleanupRenderer()
 
 void Renderer::Update(float elapsedSec)
 {
-	auto rot = Motor::Rotation(40.0f * elapsedSec, TwoBlade{0, 0, 0, 0, 1, 0});
+	auto rot = Motor::Rotation(40.0f * elapsedSec, BiVector{0, 0, 0, 0, 1, 0});
 
 	auto newPlane = (rot * m_TestPlane.PlaneGenerators * ~rot).Grade1();
 	m_TestPlane.PlaneGenerators = newPlane.Normalized();
@@ -272,7 +272,7 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 	const float camX{ (2 * (rx / static_cast<float>(m_Width)) - 1) * aspectRatio * fov };
 	const float camY{ (1 - 2 * (ry / static_cast<float>(m_Height))) * fov };
 
-	auto rayDirNorm = TwoBlade(0, 0, 0, camX, camY, 1.0f).Normalize();
+	auto rayDirNorm = BiVector(0, 0, 0, camX, camY, 1.0f).Normalize();
 
 	Color4f finalColor{0.3f, 0.3f, 0.3f, 1.0f};
 

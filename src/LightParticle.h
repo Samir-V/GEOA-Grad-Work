@@ -15,9 +15,9 @@ class LightParticle
 {
 public:
 
-	LightParticle(ThreeBlade position, TwoBlade velocity, double e);
-	[[nodiscard]] const TwoBlade& GetVelocity() const { return m_Velocity; }
-	[[nodiscard]] const ThreeBlade& GetPosition() const { return m_Position; }
+	LightParticle(TriVector position, BiVector velocity, double e);
+	[[nodiscard]] const BiVector& GetVelocity() const { return m_Velocity; }
+	[[nodiscard]] const TriVector& GetPosition() const { return m_Position; }
 	[[nodiscard]] LightState GetState() const { return m_State; }
 
 	void SetCaptured();
@@ -25,9 +25,9 @@ public:
 
 private:
 
-	ThreeBlade m_Position;
-	TwoBlade m_Velocity;
+	TriVector m_Position;
+	BiVector m_Velocity;
 	LightState m_State;
-	std::vector<ThreeBlade> m_Path;
+	std::vector<TriVector> m_Path;
 	double m_E;
 };

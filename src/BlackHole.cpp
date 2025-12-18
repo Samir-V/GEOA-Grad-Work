@@ -1,6 +1,6 @@
 #include "BlackHole.h"
 
-BlackHole::BlackHole(ThreeBlade pos, double mass) :
+BlackHole::BlackHole(TriVector pos, double mass) :
 	m_Position{std::move(pos)},
 	m_Mass{ mass }
 {
