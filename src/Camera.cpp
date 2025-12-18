@@ -28,8 +28,6 @@ void Camera::Rotate(float deltaYaw, float deltaPitch)
 	m_Yaw += deltaYaw * MouseSensitivity;
 	m_Pitch += deltaPitch * MouseSensitivity;
 
-	m_Pitch = std::clamp(m_Pitch, -89.0f, 89.0f);
-
 	UpdateTransform();
 }
 
@@ -51,13 +49,13 @@ void Camera::Update()
 
 void Camera::UpdateTransform()
 {
-	BiVector yawAxis{0, 0, 0, 0, 1, 0};
+	BiVector yawAxis{0, 0, 0, 0, 1, 0};  
 	Motor yawRotation = Motor::Rotation(m_Yaw, yawAxis);
 
 	BiVector pitchAxis{0, 0, 0, 1, 0, 0}; 
 	Motor pitchRotation = Motor::Rotation(m_Pitch, pitchAxis);
 
-	Motor rotation = yawRotation * pitchRotation;
+	Motor rotation = pitchRotation * yawRotation;
 
 	float tx = m_Origin.e032();
 	float ty = m_Origin.e013();
