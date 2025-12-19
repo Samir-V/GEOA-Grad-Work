@@ -125,6 +125,12 @@ void Renderer::InitializeRenderer()
 	m_TestSphere.Color = Color4f{ 0.4f, 0.1f, 0.8f, 1.0f };
 	m_TestSphere.Origin = TriVector{ 0.0f, 0.0f, 10.0f }.Normalized();
 	m_TestSphere.Radius = 3.0f;
+
+	m_TestLightParticle = std::make_unique<LightParticle>(
+		TriVector{-5.0f, 0.0f, 10.0f, 1.0f}.Normalized(),
+		BiVector{1, 0, 0, 0, 0, 0}, 
+		0.0 
+	);
 }
 
 void Renderer::Run()
@@ -235,6 +241,9 @@ void Renderer::Update(float elapsedSec)
 
 	auto newPlane = (rot * m_TestPlane.PlaneGenerators * ~rot).Grade1();
 	m_TestPlane.PlaneGenerators = newPlane.Normalized();
+
+	// Update light particle
+	m_TestLightParticle->Update(elapsedSec, m_CameraUPtr->GetOrigin());
 }
 
 void Renderer::ProcessKeyDownEvent(const SDL_KeyboardEvent& e)
@@ -345,12 +354,13 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 	const float camY{ (1 - 2 * (ry / static_cast<float>(m_Height))) * fov };
 
 	auto rayDirNorm = BiVector(0, 0, 0, camX, camY, 1.0f).Normalize();
+	BiVector worldRay = pCamera->CameraToWorldLine(rayDirNorm);
 
 	Color4f finalColor{0.3f, 0.3f, 0.3f, 1.0f};
 
 	float shading{};
 
-	if (HitSphere(pCamera->CameraToWorldLine(rayDirNorm), m_TestSphere, m_CameraUPtr.get(), shading))
+	if (HitSphere(worldRay, m_TestSphere, m_CameraUPtr.get(), shading))
 	{
 		finalColor = Color4f{
 			m_TestSphere.Color.r * shading,
@@ -358,6 +368,28 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 			m_TestSphere.Color.b * shading,
 			1.0f
 		};
+	}
+
+	TriVector camPos = pCamera->GetOrigin().Normalized();
+
+	if (HitBounds(worldRay, m_TestLightParticle->GetBoundsCenter(),
+	              m_TestLightParticle->GetBoundsRadius(), camPos))
+	{
+		const auto& path = m_TestLightParticle->GetPath();
+
+		for (const auto& pos : path)
+		{
+			if (HitPoint(worldRay, pos, 0.15f, camPos))
+			{
+				finalColor = Color4f{1.0f, 1.0f, 1.0f, 1.0f};
+				break;
+			}
+		}
+
+		if (HitPoint(worldRay, m_TestLightParticle->GetPosition(), 0.25f, camPos))
+		{
+			finalColor = Color4f{1.0f, 1.0f, 1.0f, 1.0f};
+		}
 	}
 
 	m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,

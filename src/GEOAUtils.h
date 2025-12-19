@@ -67,3 +67,37 @@ inline bool HitSphere(const BiVector& line, const Sphere& sphere, const Camera* 
 
     return true;
 }
+
+// Think about combining these methods
+
+inline bool HitPoint(const BiVector& line, const TriVector& point, float radius, const TriVector& camPos)
+{
+    Vector closestPlane = line | point;
+    TriVector closestPoint = (closestPlane ^ line);
+
+    if (std::abs(closestPoint.e123()) < 0.0001f) return false;
+
+    TriVector closestNorm = closestPoint.Normalized();
+
+    BiVector toPoint = point & camPos;
+    if ((toPoint | line) < 0) return false;
+
+    float dist = (closestNorm & point).Norm();
+    return dist <= radius;
+}
+
+inline bool HitBounds(const BiVector& line, const TriVector& center, float radius, const TriVector& camPos)
+{
+    BiVector toCenter = center & camPos;
+    if ((toCenter | line) < 0) return false;
+
+    Vector closestPlane = line | center;
+    TriVector closestPoint = (closestPlane ^ line);
+
+    if (std::abs(closestPoint.e123()) < 0.0001f) return false;
+
+    TriVector closestNorm = closestPoint.Normalized();
+    float dist = (closestNorm & center).Norm();
+
+    return dist <= radius;
+}

@@ -6,6 +6,7 @@
 #include <unordered_set>
 
 #include "GEOAUtils.h"
+#include "LightParticle.h"
 
 class Camera;
 
@@ -70,6 +71,7 @@ private:
 
 	Plane m_TestPlane;
 	Sphere m_TestSphere;
+	std::unique_ptr<LightParticle> m_TestLightParticle;
 
 	// FUNCTIONS
 	void InitializeRenderer( );

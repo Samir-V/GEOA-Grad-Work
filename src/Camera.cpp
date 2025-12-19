@@ -1,6 +1,5 @@
 #include "Camera.h"
 #include "FlyFish.h"
-#include <algorithm>
 
 const TriVector& Camera::GetOrigin() const
 {
