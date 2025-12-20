@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <limits>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_ttf.h>
@@ -122,7 +123,7 @@ void Renderer::InitializeRenderer()
 	m_TestPlane.PlaneGenerators = Vector{5.0f, 0, 0, 1}.Normalized();*/
 
 	m_TestSphere = Sphere();
-	m_TestSphere.Color = Color4f{ 0.4f, 0.1f, 0.8f, 1.0f };
+	m_TestSphere.Color = Color4f{ 0.0f, 0.0f, 0.0f, 1.0f };
 	m_TestSphere.Origin = TriVector{ 0.0f, 0.0f, 10.0f }.Normalized();
 	m_TestSphere.Radius = 3.0f;
 
@@ -357,21 +358,27 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 	BiVector worldRay = pCamera->CameraToWorldLine(rayDirNorm);
 
 	Color4f finalColor{0.3f, 0.3f, 0.3f, 1.0f};
-
-	float shading{};
-
-	if (HitSphere(worldRay, m_TestSphere, m_CameraUPtr.get(), shading))
-	{
-		finalColor = Color4f{
-			m_TestSphere.Color.r * shading,
-			m_TestSphere.Color.g * shading,
-			m_TestSphere.Color.b * shading,
-			1.0f
-		};
-	}
+	float closestDistSq = std::numeric_limits<float>::max();
 
 	TriVector camPos = pCamera->GetOrigin().Normalized();
 
+	// Test sphere
+	float sphereDistSq{};
+	if (HitSphere(worldRay, m_TestSphere, m_CameraUPtr.get(), sphereDistSq))
+	{
+		if (sphereDistSq < closestDistSq)
+		{
+			closestDistSq = sphereDistSq;
+			finalColor = Color4f{
+				m_TestSphere.Color.r,
+				m_TestSphere.Color.g,
+				m_TestSphere.Color.b,
+				1.0f
+			};
+		}
+	}
+
+	// Test light particle
 	if (HitBounds(worldRay, m_TestLightParticle->GetBoundsCenter(),
 	              m_TestLightParticle->GetBoundsRadius(), camPos))
 	{
@@ -379,16 +386,25 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 
 		for (const auto& pos : path)
 		{
-			if (HitPoint(worldRay, pos, 0.15f, camPos))
+			float pointDistSq{};
+			if (HitPoint(worldRay, pos, 0.05f, camPos, pointDistSq))
 			{
-				finalColor = Color4f{1.0f, 1.0f, 1.0f, 1.0f};
-				break;
+				if (pointDistSq < closestDistSq)
+				{
+					closestDistSq = pointDistSq;
+					finalColor = Color4f{1.0f, 1.0f, 1.0f, 1.0f};
+				}
 			}
 		}
 
-		if (HitPoint(worldRay, m_TestLightParticle->GetPosition(), 0.25f, camPos))
+		float posDistSq{};
+		if (HitPoint(worldRay, m_TestLightParticle->GetPosition(), 0.10f, camPos, posDistSq))
 		{
-			finalColor = Color4f{1.0f, 1.0f, 1.0f, 1.0f};
+			if (posDistSq < closestDistSq)
+			{
+				closestDistSq = posDistSq;
+				finalColor = Color4f{1.0f, 1.0f, 1.0f, 1.0f};
+			}
 		}
 	}
 
