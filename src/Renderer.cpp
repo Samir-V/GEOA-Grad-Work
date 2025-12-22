@@ -1,6 +1,5 @@
 #include <iostream>
 #include <algorithm>
-#include <limits>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_ttf.h>
@@ -14,7 +13,6 @@
 #include "utils.h"
 #include "structs.h"
 #include "Camera.h"
-#include "GEOAUtils.h"
 
 Renderer::Renderer(const Window& window)
 	: m_Window{ window }
@@ -122,16 +120,9 @@ void Renderer::InitializeRenderer()
 	m_TestPlane.Color = Color4f{0.4f, 0.1f, 0.8f, 1.0f};
 	m_TestPlane.PlaneGenerators = Vector{5.0f, 0, 0, 1}.Normalized();*/
 
-	m_TestSphere = Sphere();
-	m_TestSphere.Color = Color4f{ 0.0f, 0.0f, 0.0f, 1.0f };
-	m_TestSphere.Origin = TriVector{ 0.0f, 0.0f, 10.0f }.Normalized();
-	m_TestSphere.Radius = 3.0f;
-
-	m_TestLightParticle = std::make_unique<LightParticle>(
-		TriVector{-5.0f, 0.0f, 10.0f, 1.0f}.Normalized(),
-		BiVector{1, 0, 0, 0, 0, 0}, 
-		0.0 
-	);
+	// Create simulator with black hole at (0, 0, 10)
+	BlackHole blackHole{TriVector{0.0f, 0.0f, 10.0f, 1.0f}, 3.0};
+	m_SimulatorUPtr = std::make_unique<Simulator>(blackHole, 0.01, false, true);
 }
 
 void Renderer::Run()
@@ -237,14 +228,8 @@ void Renderer::Update(float elapsedSec)
 	// Process camera movement based on held keys
 	ProcessCameraInput(elapsedSec);
 
-	// Rotate the test plane
-	auto rot = Motor::Rotation(40.0f * elapsedSec, BiVector{0, 0, 0, 0, 1, 0});
-
-	auto newPlane = (rot * m_TestPlane.PlaneGenerators * ~rot).Grade1();
-	m_TestPlane.PlaneGenerators = newPlane.Normalized();
-
-	// Update light particle
-	m_TestLightParticle->Update(elapsedSec, m_CameraUPtr->GetOrigin());
+	// Update simulator
+	m_SimulatorUPtr->Update(elapsedSec, m_CameraUPtr->GetOrigin());
 }
 
 void Renderer::ProcessKeyDownEvent(const SDL_KeyboardEvent& e)
@@ -357,56 +342,9 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 	auto rayDirNorm = BiVector(0, 0, 0, camX, camY, 1.0f).Normalize();
 	BiVector worldRay = pCamera->CameraToWorldLine(rayDirNorm);
 
-	Color4f finalColor{0.3f, 0.3f, 0.3f, 1.0f};
-	float closestDistSq = std::numeric_limits<float>::max();
+	HitResult result = m_SimulatorUPtr->TestRay(worldRay, pCamera);
 
-	TriVector camPos = pCamera->GetOrigin().Normalized();
-
-	// Test sphere
-	float sphereDistSq{};
-	if (HitSphere(worldRay, m_TestSphere, m_CameraUPtr.get(), sphereDistSq))
-	{
-		if (sphereDistSq < closestDistSq)
-		{
-			closestDistSq = sphereDistSq;
-			finalColor = Color4f{
-				m_TestSphere.Color.r,
-				m_TestSphere.Color.g,
-				m_TestSphere.Color.b,
-				1.0f
-			};
-		}
-	}
-
-	// Test light particle
-	if (HitBounds(worldRay, m_TestLightParticle->GetBoundsCenter(),
-	              m_TestLightParticle->GetBoundsRadius(), camPos))
-	{
-		const auto& path = m_TestLightParticle->GetPath();
-
-		for (const auto& pos : path)
-		{
-			float pointDistSq{};
-			if (HitPoint(worldRay, pos, 0.05f, camPos, pointDistSq))
-			{
-				if (pointDistSq < closestDistSq)
-				{
-					closestDistSq = pointDistSq;
-					finalColor = Color4f{1.0f, 1.0f, 1.0f, 1.0f};
-				}
-			}
-		}
-
-		float posDistSq{};
-		if (HitPoint(worldRay, m_TestLightParticle->GetPosition(), 0.10f, camPos, posDistSq))
-		{
-			if (posDistSq < closestDistSq)
-			{
-				closestDistSq = posDistSq;
-				finalColor = Color4f{1.0f, 1.0f, 1.0f, 1.0f};
-			}
-		}
-	}
+	Color4f finalColor = result.hit ? result.color : Color4f{0.3f, 0.3f, 0.3f, 1.0f};
 
 	m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
 		static_cast<uint8_t>(finalColor.r * 255),

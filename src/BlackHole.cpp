@@ -12,10 +12,12 @@ BlackHole::BlackHole(TriVector pos, double mass) :
 
 BlackHoleData BlackHole::GetData() const
 {
+	// THE RADIUS VALUE IS A TESTING VALUE, CHANGE IT LATER
+
 	return BlackHoleData{
 		.Position = m_Position,
 		.Mass = m_Mass,
-		.SchwarzschildRadius = m_SchwarzschildRadius,
+		.SchwarzschildRadius = 3.0,
 		.PhotonSphereRadius = m_PhotonSphereRadius,
 		.CriticalESquared = m_CriticalESquared
 	};
