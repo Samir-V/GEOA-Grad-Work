@@ -255,6 +255,21 @@ void Renderer::ProcessKeyDownEvent(const SDL_KeyboardEvent& e)
 
 void Renderer::ProcessKeyUpEvent(const SDL_KeyboardEvent& e)
 {
+	if (e.keysym.scancode == SDL_SCANCODE_P)
+	{
+		BiVector forward{ 0, 0, 0, 0, 0, 1 };
+		BiVector worldForward = m_CameraUPtr->CameraToWorldLine(forward);
+
+		BiVector direction{ worldForward.e23(), worldForward.e31(), worldForward.e12(), 0, 0, 0};
+
+		auto motor = Motor::Translation(1.0f, direction);
+		auto newOrigin = (motor * m_CameraUPtr->GetOrigin() * ~motor).Grade3().Normalized();
+
+		m_SimulatorUPtr->SpawnLightParticle(
+			newOrigin,
+			direction);
+	}
+
 	m_PressedKeys.erase(e.keysym.sym);
 }
 

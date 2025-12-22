@@ -21,7 +21,7 @@ public:
 
 	void UpdateParticleRK4(LightParticle& particle, const TriVector& cameraPos, double deltaTime);
 	void Update(float elapsedSec, const TriVector& cameraPos);
-	void SpawnLightParticle(const TriVector& position, const TriVector& direction);
+	void SpawnLightParticle(const TriVector& position, const BiVector& direction);
 
 	HitResult TestRay(const BiVector& ray, const Camera* pCamera) const;
 

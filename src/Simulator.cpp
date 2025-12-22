@@ -89,3 +89,9 @@ HitResult Simulator::TestRay(const BiVector& ray, const Camera* pCamera) const
 
 	return result;
 }
+
+void Simulator::SpawnLightParticle(const TriVector& position, const BiVector& direction)
+{
+	// Add the E calculation later on
+	m_LightParticles.emplace_back(position, direction, 0.0);
+}
