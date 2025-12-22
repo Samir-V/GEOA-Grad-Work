@@ -17,6 +17,29 @@ BiVector Camera::CameraToWorldLine(const BiVector& line) const
 	return (m_Transform * line * ~m_Transform).Grade2();
 }
 
+bool Camera::WorldToScreen(const TriVector& point, int screenWidth, int screenHeight,
+	float fov, float aspectRatio, int& outScreenX, int& outScreenY) const
+{
+	TriVector camPos = m_Origin.Normalized();
+
+	BiVector toPoint = point.Normalized() & camPos;
+
+	BiVector worldForward = CameraToWorldLine(BiVector{0, 0, 0, 0, 0, 1});
+	BiVector worldRight = CameraToWorldLine(BiVector{0, 0, 0, 1, 0, 0});
+	BiVector worldUp = CameraToWorldLine(BiVector{0, 0, 0, 0, 1, 0});
+
+	float camZ = toPoint | worldForward;
+	if (camZ <= 0.01f) return false;
+
+	float camX = toPoint | worldRight;
+	float camY = toPoint | worldUp;
+
+	outScreenX = static_cast<int>((camX / camZ / (aspectRatio * fov) + 1.0f) * 0.5f * screenWidth);
+	outScreenY = static_cast<int>((1.0f - camY / camZ / fov) * 0.5f * screenHeight);
+
+	return true;
+}
+
 float Camera::GetFOVAngle() const
 {
 	return m_FovAngle;

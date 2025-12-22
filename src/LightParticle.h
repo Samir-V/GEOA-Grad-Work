@@ -20,8 +20,6 @@ public:
 	[[nodiscard]] const TriVector& GetPosition() const { return m_Position; }
 	[[nodiscard]] LightState GetState() const { return m_State; }
 	[[nodiscard]] const std::vector<TriVector>& GetPath() const { return m_Path; }
-	[[nodiscard]] const TriVector& GetBoundsCenter() const { return m_BoundsCenter; }
-	[[nodiscard]] float GetBoundsRadius() const { return m_BoundsRadius; }
 
 	void Update(float deltaTime, const TriVector& camPos);
 	void SetCaptured();
@@ -39,9 +37,4 @@ private:
 	std::vector<TriVector> m_Path;
 	double m_E;
 	float m_TimeSinceLastPath{ 0.0f };
-
-	TriVector m_BoundsCenter;
-	float m_BoundsRadius{ 0.0f };
-
-	void UpdateBounds();
 };

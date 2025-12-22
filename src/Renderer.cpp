@@ -322,6 +322,8 @@ void Renderer::Render()
 
 	const float FOVScalar{ tanf(FOVAngleRad / 2.0f) };
 
+	m_SimulatorUPtr->UpdateScreenBounds(m_CameraUPtr.get(), m_Width, m_Height, FOVScalar, aspectRatio);
+
 	// Render info
 
 	const uint32_t amountOfPixels{ uint32_t(m_Width * m_Height) };
@@ -357,7 +359,7 @@ void Renderer::RenderPixel(uint32_t pixelIndex, float fov, float aspectRatio, co
 	auto rayDirNorm = BiVector(0, 0, 0, camX, camY, 1.0f).Normalize();
 	BiVector worldRay = pCamera->CameraToWorldLine(rayDirNorm);
 
-	HitResult result = m_SimulatorUPtr->TestRay(worldRay, pCamera);
+	HitResult result = m_SimulatorUPtr->TestRayAtPixel(worldRay, pCamera, px, py);
 
 	Color4f finalColor = result.hit ? result.color : Color4f{0.3f, 0.3f, 0.3f, 1.0f};
 

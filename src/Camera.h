@@ -18,6 +18,9 @@ public:
 	TriVector CameraToWorldPoint(const TriVector& point) const;
 	BiVector CameraToWorldLine(const BiVector& line) const;
 
+	bool WorldToScreen(const TriVector& point, int screenWidth, int screenHeight,
+		float fov, float aspectRatio, int& outScreenX, int& outScreenY) const;
+
 	// Camera control methods
 	void Rotate(float deltaYaw, float deltaPitch);
 	void Move(float forward, float right, float up, float elapsedSec);
