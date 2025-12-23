@@ -17,10 +17,16 @@ Simulator::Simulator(BlackHole blackHole, double fixedTimeStep, bool useEOptimiz
 
 void Simulator::Update(float elapsedSec, const TriVector& cameraPos)
 {
-	for (auto& particle : m_LightParticles)
+	for (size_t index = 0; index < m_LightParticles.size(); index++)
 	{
-		UpdateParticleRK4(particle, cameraPos, elapsedSec);
+		UpdateParticleRK4(m_LightParticles[index], cameraPos, elapsedSec);
 	}
+
+	// Remove captured particles
+	m_LightParticles.erase(
+		std::remove_if(m_LightParticles.begin(), m_LightParticles.end(),
+			[](const LightParticle& p) { return p.GetState() == LightState::CAPTURED; }),
+		m_LightParticles.end());
 }
 
 
@@ -30,8 +36,16 @@ void Simulator::UpdateParticleRK4(LightParticle& particle, const TriVector& came
 	{
 		return;
 	}
+	
+	auto line = particle.GetPosition() & m_BlackHoleSphere.Origin;
 
-	// Will be moved from the particle update
+	if (line.Norm() < m_BlackHoleSphere.Radius)
+	{
+		particle.SetCaptured();
+		return;
+	}
+
+	// Add the functionality of the particle being affected by gravity.
 	particle.Update(deltaTime, cameraPos);
 
 	double dt = m_UseDeltaTime && deltaTime > 0 ? deltaTime : m_FixedTimeStep;

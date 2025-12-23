@@ -29,7 +29,7 @@ private:
 
 	static constexpr size_t MaxPathSize = 4;
 	static constexpr float PathUpdateInterval = 0.3f;
-	static constexpr float MaxDistanceSq = 100.0f * 100.0f;
+	static constexpr float MaxDistanceSq = 50.0f * 50.0f;
 
 	TriVector m_Position;
 	BiVector m_Velocity;
