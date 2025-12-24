@@ -9,11 +9,11 @@ LightParticle::LightParticle(TriVector position, BiVector velocity, double e) :
 	m_Path.push_back(m_Position);
 }
 
-void LightParticle::Update(float deltaTime, const TriVector& camPos)
+void LightParticle::Update(float deltaTime, float physicsDeltaTime, const TriVector& camPos)
 {
 	if (m_State != LightState::MOVING) return;
 
-	Motor translator = Motor::Translation(10 * deltaTime, m_Velocity);
+	Motor translator = Motor::Translation(C * physicsDeltaTime, m_Velocity);
 	m_Position = (translator * m_Position * ~translator).Grade3().Normalize();
 
 	float dx = m_Position.e032() - camPos.e032();

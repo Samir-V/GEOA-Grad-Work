@@ -28,11 +28,13 @@ class Simulator
 public:
 	Simulator(BlackHole blackHole, double fixedTimeStep, bool useEOptimization, bool useDeltaTime);
 
-	void UpdateParticleRK4(LightParticle& particle, const TriVector& cameraPos, double deltaTime);
+	void UpdateParticleRK4(LightParticle& particle, const TriVector& cameraPos, float deltaTime, float physicsDeltaTime);
 	void Update(float elapsedSec, const TriVector& cameraPos);
 	void SpawnLightParticle(const TriVector& position, const BiVector& direction);
 	void UpdateScreenBounds(const Camera* pCamera, int screenWidth, int screenHeight, float fov, float aspectRatio);
 	HitResult TestRayAtPixel(const BiVector& ray, const Camera* pCamera, int px, int py) const;
+
+	static constexpr double TimeScale{ 3.33e-8 };
 
 private:
 	BlackHole m_BlackHole;

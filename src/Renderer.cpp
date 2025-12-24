@@ -121,7 +121,7 @@ void Renderer::InitializeRenderer()
 	m_TestPlane.PlaneGenerators = Vector{5.0f, 0, 0, 1}.Normalized();*/
 
 	// Create simulator with black hole at (0, 0, 10)
-	BlackHole blackHole{TriVector{0.0f, 0.0f, 10.0f, 1.0f}, 3.0};
+	BlackHole blackHole{TriVector{0.0f, 0.0f, 10.0f, 1.0f}, 2.02e27 };
 	m_SimulatorUPtr = std::make_unique<Simulator>(blackHole, 0.01, false, true);
 }
 

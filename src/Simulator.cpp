@@ -17,20 +17,19 @@ Simulator::Simulator(BlackHole blackHole, double fixedTimeStep, bool useEOptimiz
 
 void Simulator::Update(float elapsedSec, const TriVector& cameraPos)
 {
-	for (size_t index = 0; index < m_LightParticles.size(); index++)
+	double physicsDt = elapsedSec * TimeScale;
+
+	for (auto& m_LightParticle : m_LightParticles)
 	{
-		UpdateParticleRK4(m_LightParticles[index], cameraPos, elapsedSec);
+		UpdateParticleRK4(m_LightParticle, cameraPos, elapsedSec, physicsDt);
 	}
 
 	// Remove captured particles
-	m_LightParticles.erase(
-		std::remove_if(m_LightParticles.begin(), m_LightParticles.end(),
-			[](const LightParticle& p) { return p.GetState() == LightState::CAPTURED; }),
-		m_LightParticles.end());
+	std::erase_if(m_LightParticles, [](const LightParticle& p) { return p.GetState() == LightState::CAPTURED; });
 }
 
 
-void Simulator::UpdateParticleRK4(LightParticle& particle, const TriVector& cameraPos, double deltaTime)
+void Simulator::UpdateParticleRK4(LightParticle& particle, const TriVector& cameraPos, float deltaTime, float physicsDeltaTime)
 {
 	if (particle.GetState() == LightState::CAPTURED)
 	{
@@ -46,9 +45,9 @@ void Simulator::UpdateParticleRK4(LightParticle& particle, const TriVector& came
 	}
 
 	// Add the functionality of the particle being affected by gravity.
-	particle.Update(deltaTime, cameraPos);
-
 	double dt = m_UseDeltaTime && deltaTime > 0 ? deltaTime : m_FixedTimeStep;
+
+	particle.Update(dt, physicsDeltaTime, cameraPos);
 }
 
 void Simulator::SpawnLightParticle(const TriVector& position, const BiVector& direction)
