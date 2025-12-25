@@ -21,7 +21,7 @@ public:
 	[[nodiscard]] LightState GetState() const { return m_State; }
 	[[nodiscard]] const std::vector<TriVector>& GetPath() const { return m_Path; }
 
-	void Update(float deltaTime, float physicsDeltaTime, const TriVector& camPos);
+	void Update(float deltaTime, float physicsDeltaTime, const BiVector& bendingAccel);
 	void SetCaptured();
 	void SetState(LightState state) { m_State = state; }
 
@@ -29,8 +29,6 @@ private:
 
 	static constexpr size_t MaxPathSize = 4;
 	static constexpr float PathUpdateInterval = 0.3f;
-	static constexpr float MaxDistanceSq = 50.0f * 50.0f;
-	static constexpr double C = 299792458.0;
 
 	TriVector m_Position;
 	BiVector m_Velocity;

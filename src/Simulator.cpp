@@ -2,6 +2,8 @@
 #include "Camera.h"
 #include <algorithm>
 
+#include "utils.h"
+
 Simulator::Simulator(BlackHole blackHole, double fixedTimeStep, bool useEOptimization, bool useDeltaTime) :
 	m_BlackHole{ std::move(blackHole) },
 	m_FixedTimeStep{ fixedTimeStep },
@@ -44,10 +46,24 @@ void Simulator::UpdateParticleRK4(LightParticle& particle, const TriVector& came
 		return;
 	}
 
-	// Add the functionality of the particle being affected by gravity.
 	double dt = m_UseDeltaTime && deltaTime > 0 ? deltaTime : m_FixedTimeStep;
 
-	particle.Update(dt, physicsDeltaTime, cameraPos);
+	auto particlePos = particle.GetPosition();
+
+	float dx = particlePos.e032() - cameraPos.e032();
+	float dy = particlePos.e013() - cameraPos.e013();
+	float dz = particlePos.e021() - cameraPos.e021();
+	float distSq = dx * dx + dy * dy + dz * dz;
+
+	if (distSq > MaxDistanceSq)
+	{
+		particle.SetCaptured();
+		return;
+	}
+
+	BiVector bendingAccel = CalculateLightBendingForce(particlePos, particle.GetVelocity(), m_BlackHole.GetData());
+
+	particle.Update(dt, physicsDeltaTime, bendingAccel);
 }
 
 void Simulator::SpawnLightParticle(const TriVector& position, const BiVector& direction)
@@ -162,3 +178,33 @@ HitResult Simulator::TestRayAtPixel(const BiVector& ray, const Camera* pCamera, 
 
 	return result;
 }
+
+BiVector Simulator::CalculateLightBendingForce(const TriVector& particlePos, const BiVector& particleVelocity, const BlackHoleData& blackHole)
+{
+	BiVector toBlackHole = particlePos & blackHole.Position;
+	float currentDistance = toBlackHole.Norm();
+
+	if (currentDistance <= blackHole.SchwarzschildRadius)
+	{
+		return BiVector{ 0, 0, 0, 0, 0, 0 };
+	}
+
+	toBlackHole.Normalize();
+
+	BiVector velDirection = BiVector{ 0, 0, 0, particleVelocity.e01(), particleVelocity.e02(), particleVelocity.e03()};
+	velDirection.Normalize();
+
+	float alignment = toBlackHole | velDirection;
+
+	BiVector perp = (toBlackHole - velDirection * alignment).Normalize();
+
+	double bendingRate = (blackHole.SchwarzschildRadius * utils::C) / (currentDistance * currentDistance);
+
+	return BiVector{
+		static_cast<float>(perp.e23() * bendingRate),
+		static_cast<float>(perp.e31() * bendingRate),
+		static_cast<float>(perp.e12() * bendingRate),
+		0, 0, 0
+	};
+}
+

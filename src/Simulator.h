@@ -35,6 +35,7 @@ public:
 	HitResult TestRayAtPixel(const BiVector& ray, const Camera* pCamera, int px, int py) const;
 
 	static constexpr double TimeScale{ 3.33e-8 };
+	static constexpr float MaxDistanceSq = 50.0f * 50.0f;
 
 private:
 	BlackHole m_BlackHole;
@@ -45,4 +46,6 @@ private:
 	bool m_UseDeltaTime;
 
 	std::vector<ScreenBounds> m_ParticleScreenBounds;
+
+	static BiVector CalculateLightBendingForce(const TriVector& particlePos, const BiVector& particleVelocity, const BlackHoleData& blackHole);
 };

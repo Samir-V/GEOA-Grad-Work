@@ -5,6 +5,9 @@
 namespace utils
 {
 	const float g_Pi{ 3.1415926535f };
+	static constexpr double G = 6.67430e-11;
+	static constexpr double C = 299792458.0;
+	static constexpr double C_SQUARED = C * C;
 
 #pragma region OpenGLDrawFunctionality
 

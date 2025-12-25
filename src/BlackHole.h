@@ -17,10 +17,6 @@ public:
 
 	[[nodiscard]] BlackHoleData GetData() const;
 
-	static constexpr double G = 6.67430e-11;
-	static constexpr double C = 299792458.0;
-	static constexpr double C_SQUARED = C * C;
-
 private:
 
 	TriVector m_Position;
