@@ -189,16 +189,23 @@ BiVector Simulator::CalculateLightBendingForce(const TriVector& particlePos, con
 		return BiVector{ 0, 0, 0, 0, 0, 0 };
 	}
 
+	double metricFactor = 1.0 - blackHole.SchwarzschildRadius / currentDistance;
+
+	if (metricFactor <= 0.0)
+	{
+		return BiVector{ 0, 0, 0, 0, 0, 0 };
+	}
+
 	toBlackHole.Normalize();
 
 	BiVector velDirection = BiVector{ 0, 0, 0, particleVelocity.e01(), particleVelocity.e02(), particleVelocity.e03()};
 	velDirection.Normalize();
 
 	float alignment = toBlackHole | velDirection;
-
 	BiVector perp = (toBlackHole - velDirection * alignment).Normalize();
 
-	double bendingRate = (blackHole.SchwarzschildRadius * utils::C) / (currentDistance * currentDistance);
+	double baseBending = (blackHole.SchwarzschildRadius * utils::C) / (currentDistance * currentDistance);
+	double bendingRate = baseBending / metricFactor;
 
 	return BiVector{
 		static_cast<float>(perp.e23() * bendingRate),

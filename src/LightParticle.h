@@ -34,6 +34,6 @@ private:
 	BiVector m_Velocity;
 	LightState m_State;
 	std::vector<TriVector> m_Path;
-	double m_E;
+	double m_ESquared;
 	float m_TimeSinceLastPath{ 0.0f };
 };

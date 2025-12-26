@@ -6,7 +6,7 @@ LightParticle::LightParticle(TriVector position, BiVector velocity, double e) :
 	m_Position{ std::move(position) },
 	m_Velocity{ std::move(velocity) },
 	m_State{ LightState::MOVING },
-	m_E{ e }
+	m_ESquared{ e }
 {
 	m_Path.push_back(m_Position);
 }
