@@ -131,7 +131,8 @@ TriVector LightParticle::GetPosition() const
 {
 	double cosAngle = std::cos(m_OrbitAngle);
 	double sinAngle = std::sin(m_OrbitAngle);
-
+	
+	// This is a vectorial blend. This should be removed in favour of PGA.
 	BiVector direction = m_RadialAxis * cosAngle + m_TangentialAxis * sinAngle;
 
 	BiVector translationDir{ direction.e23(), direction.e31(), direction.e12(), 0, 0, 0 };

@@ -44,6 +44,7 @@ private:
 	TriVector m_BlackHolePos;
 	double m_SchwarzschildRadius;
 
+	// See how these Axes could be represented as a single plane.
 	BiVector m_RadialAxis; // The direction FROM the black hole to the particle
 	BiVector m_TangentialAxis; // The perpendicular direction
 
