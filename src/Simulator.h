@@ -26,26 +26,22 @@ struct ScreenBounds
 class Simulator
 {
 public:
-	Simulator(BlackHole blackHole, double fixedTimeStep, bool useEOptimization, bool useDeltaTime);
+	Simulator(BlackHole blackHole);
 
-	void UpdateParticleRK4(LightParticle& particle, const TriVector& cameraPos, float deltaTime, float physicsDeltaTime);
+	void UpdateParticleRK4(LightParticle& particle, const TriVector& cameraPos, float deltaTime);
 	void Update(float elapsedSec, const TriVector& cameraPos);
 	void SpawnLightParticle(const TriVector& position, const BiVector& direction);
 	void UpdateScreenBounds(const Camera* pCamera, int screenWidth, int screenHeight, float fov, float aspectRatio);
 	HitResult TestRayAtPixel(const BiVector& ray, const Camera* pCamera, int px, int py) const;
 
-	static constexpr double TimeScale{ 3.33e-8 };
+	static constexpr float SimulationSpeed{ 20 };
 	static constexpr float MaxDistanceSq = 50.0f * 50.0f;
 
 private:
+
 	BlackHole m_BlackHole;
 	Sphere m_BlackHoleSphere;
 	std::vector<LightParticle> m_LightParticles;
-	double m_FixedTimeStep;
-	bool m_UseEOptimization;
-	bool m_UseDeltaTime;
 
 	std::vector<ScreenBounds> m_ParticleScreenBounds;
-
-	static BiVector CalculateLightBendingForce(const TriVector& particlePos, const BiVector& particleVelocity, const BlackHoleData& blackHole);
 };

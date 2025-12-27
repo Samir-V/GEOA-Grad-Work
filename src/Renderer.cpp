@@ -122,7 +122,7 @@ void Renderer::InitializeRenderer()
 
 	// Create simulator with black hole at (0, 0, 10)
 	BlackHole blackHole{TriVector{0.0f, 0.0f, 10.0f, 1.0f}, 2.02e27 };
-	m_SimulatorUPtr = std::make_unique<Simulator>(blackHole, 0.01, false, true);
+	m_SimulatorUPtr = std::make_unique<Simulator>(blackHole);
 }
 
 void Renderer::Run()
@@ -202,7 +202,7 @@ void Renderer::Run()
 			float fpsElapsed = std::chrono::duration<float>(fpsNow - fpsTimer).count();
 			if (fpsElapsed >= 1.0f)
 			{
-				std::cout << "FPS: " << frameCount / fpsElapsed << std::endl;
+				//std::cout << "FPS: " << frameCount / fpsElapsed << std::endl;
 				frameCount = 0;
 				fpsTimer = fpsNow;
 			}
@@ -260,9 +260,10 @@ void Renderer::ProcessKeyUpEvent(const SDL_KeyboardEvent& e)
 		BiVector forward{ 0, 0, 0, 0, 0, 1 };
 		BiVector worldForward = m_CameraUPtr->CameraToWorldLine(forward);
 
-		BiVector direction{ worldForward.e23(), worldForward.e31(), worldForward.e12(), 0, 0, 0};
+		BiVector displacement{ worldForward.e23(), worldForward.e31(), worldForward.e12(), 0, 0, 0};
+		BiVector direction{0, 0, 0, worldForward.e23(), worldForward.e31(), worldForward.e12() };
 
-		auto motor = Motor::Translation(1.0f, direction);
+		auto motor = Motor::Translation(1.0f, displacement);
 		auto newOrigin = (motor * m_CameraUPtr->GetOrigin() * ~motor).Grade3().Normalized();
 
 		m_SimulatorUPtr->SpawnLightParticle(

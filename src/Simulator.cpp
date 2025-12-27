@@ -2,13 +2,8 @@
 #include "Camera.h"
 #include <algorithm>
 
-#include "utils.h"
-
-Simulator::Simulator(BlackHole blackHole, double fixedTimeStep, bool useEOptimization, bool useDeltaTime) :
-	m_BlackHole{ std::move(blackHole) },
-	m_FixedTimeStep{ fixedTimeStep },
-	m_UseEOptimization{ useEOptimization },
-	m_UseDeltaTime{ useDeltaTime }
+Simulator::Simulator(BlackHole blackHole) :
+	m_BlackHole{ std::move(blackHole) }
 {
 	BlackHoleData data = m_BlackHole.GetData();
 	m_BlackHoleSphere.Origin = data.Position.Normalized();
@@ -19,34 +14,23 @@ Simulator::Simulator(BlackHole blackHole, double fixedTimeStep, bool useEOptimiz
 
 void Simulator::Update(float elapsedSec, const TriVector& cameraPos)
 {
-	double physicsDt = elapsedSec * TimeScale;
 
 	for (auto& m_LightParticle : m_LightParticles)
 	{
-		UpdateParticleRK4(m_LightParticle, cameraPos, elapsedSec, physicsDt);
+		UpdateParticleRK4(m_LightParticle, cameraPos, elapsedSec);
 	}
 
 	// Remove captured particles
-	std::erase_if(m_LightParticles, [](const LightParticle& p) { return p.GetState() == LightState::CAPTURED; });
+	std::erase_if(m_LightParticles, [](const LightParticle& p) { return p.GetState() == LightState::CAPTURED || p.GetState() == LightState::ESCAPING; });
 }
 
 
-void Simulator::UpdateParticleRK4(LightParticle& particle, const TriVector& cameraPos, float deltaTime, float physicsDeltaTime)
+void Simulator::UpdateParticleRK4(LightParticle& particle, const TriVector& cameraPos, float deltaTime)
 {
-	if (particle.GetState() == LightState::CAPTURED)
+	if (particle.GetState() == LightState::CAPTURED || particle.GetState() == LightState::ESCAPING)
 	{
 		return;
 	}
-	
-	auto line = particle.GetPosition() & m_BlackHoleSphere.Origin;
-
-	if (line.Norm() < m_BlackHoleSphere.Radius)
-	{
-		particle.SetCaptured();
-		return;
-	}
-
-	double dt = m_UseDeltaTime && deltaTime > 0 ? deltaTime : m_FixedTimeStep;
 
 	auto particlePos = particle.GetPosition();
 
@@ -61,15 +45,12 @@ void Simulator::UpdateParticleRK4(LightParticle& particle, const TriVector& came
 		return;
 	}
 
-	BiVector bendingAccel = CalculateLightBendingForce(particlePos, particle.GetVelocity(), m_BlackHole.GetData());
-
-	particle.Update(dt, physicsDeltaTime, bendingAccel);
+	particle.Update(deltaTime, SimulationSpeed);
 }
 
 void Simulator::SpawnLightParticle(const TriVector& position, const BiVector& direction)
 {
-	// Add the E calculation later on
-	m_LightParticles.emplace_back(position, direction, 0.0);
+	m_LightParticles.emplace_back(position, direction, m_BlackHole.GetData());
 }
 
 void Simulator::UpdateScreenBounds(const Camera* pCamera, int screenWidth, int screenHeight, float fov, float aspectRatio)
@@ -177,41 +158,5 @@ HitResult Simulator::TestRayAtPixel(const BiVector& ray, const Camera* pCamera, 
 	}
 
 	return result;
-}
-
-BiVector Simulator::CalculateLightBendingForce(const TriVector& particlePos, const BiVector& particleVelocity, const BlackHoleData& blackHole)
-{
-	BiVector toBlackHole = particlePos & blackHole.Position;
-	float currentDistance = toBlackHole.Norm();
-
-	if (currentDistance <= blackHole.SchwarzschildRadius)
-	{
-		return BiVector{ 0, 0, 0, 0, 0, 0 };
-	}
-
-	double metricFactor = 1.0 - blackHole.SchwarzschildRadius / currentDistance;
-
-	if (metricFactor <= 0.0)
-	{
-		return BiVector{ 0, 0, 0, 0, 0, 0 };
-	}
-
-	toBlackHole.Normalize();
-
-	BiVector velDirection = BiVector{ 0, 0, 0, particleVelocity.e01(), particleVelocity.e02(), particleVelocity.e03()};
-	velDirection.Normalize();
-
-	float alignment = toBlackHole | velDirection;
-	BiVector perp = (toBlackHole - velDirection * alignment).Normalize();
-
-	double baseBending = (blackHole.SchwarzschildRadius * utils::C) / (currentDistance * currentDistance);
-	double bendingRate = baseBending / metricFactor;
-
-	return BiVector{
-		static_cast<float>(perp.e23() * bendingRate),
-		static_cast<float>(perp.e31() * bendingRate),
-		static_cast<float>(perp.e12() * bendingRate),
-		0, 0, 0
-	};
 }
 
