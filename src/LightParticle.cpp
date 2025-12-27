@@ -23,6 +23,7 @@ LightParticle::LightParticle(TriVector position, BiVector initialDirection, cons
 
 	BiVector velocityDir = BiVector{ 0, 0, 0, initialDirection.e23(), initialDirection.e31(), initialDirection.e12() }.Normalized();
 
+	// Check for a possible rejection substitution of GA.
 	double alignment = -(velocityDir | m_RadialAxis);
 	BiVector tangent = velocityDir - m_RadialAxis * alignment;
 	double tangentMag = tangent.Norm();
