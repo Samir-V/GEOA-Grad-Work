@@ -36,7 +36,7 @@ private:
 	double m_E; // Energy
 	double m_L; // Angular momentum 
 
-	// Predicting fate data (shared across all particles)
+	// Predicting fate data 
 	static double m_CriticalImpactParameter;
 	static bool m_CriticalImpactParameterInitialized;
 
@@ -44,9 +44,9 @@ private:
 	TriVector m_BlackHolePos;
 	double m_SchwarzschildRadius;
 
-	// See how these Axes could be represented as a single plane.
-	BiVector m_RadialAxis; // The direction FROM the black hole to the particle
-	BiVector m_TangentialAxis; // The perpendicular direction
+	BiVector m_RadialAxis; // Direction from black hole to particle
+	BiVector m_TangentialAxis; // Perpendicular direction in the orbital plane
+	BiVector m_OrbitalNormal; // Normal to the orbital plane
 
 	// Rendering data
 	LightState m_State;

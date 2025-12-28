@@ -1,6 +1,7 @@
 #include "LightParticle.h"
 #include "BlackHole.h"
 #include <iostream>
+#include "utils.h"
 
 double LightParticle::m_CriticalImpactParameter = 0.0;
 bool LightParticle::m_CriticalImpactParameterInitialized = false;
@@ -23,24 +24,34 @@ LightParticle::LightParticle(TriVector position, BiVector initialDirection, cons
 
 	BiVector velocityDir = BiVector{ 0, 0, 0, initialDirection.e23(), initialDirection.e31(), initialDirection.e12() }.Normalized();
 
-	// Check for a possible rejection substitution of GA.
+	// COMMUTATOR product of the gep between two lines gives the common normal for these two lines
+	// velocity of the particle is in the plane by definition
+	// radial axis is created by two points that are in the plane, hence also is in the plane
+	// hence the commutator product produces a normal to the plane they lie in
+	m_OrbitalNormal = (velocityDir * m_RadialAxis).Grade2().Normalized();
+
+	// Tangential axis must lie in the plane and be perpendicular to the radial axis
+	// that means it is also perpendicular to the orbital normal by definition
+	// commutator product produces a line perpendicular to them both
+	m_TangentialAxis = (m_OrbitalNormal * m_RadialAxis).Grade2().Normalized();
+
 	double alignment = -(velocityDir | m_RadialAxis);
-	BiVector tangent = velocityDir - m_RadialAxis * alignment;
-	double tangentMag = tangent.Norm();
+	double tangentProjection = -(velocityDir | m_TangentialAxis);
+
+	if (tangentProjection < 0)
+	{
+		m_TangentialAxis = m_TangentialAxis * -1.0f;
+		tangentProjection = -tangentProjection;
+	}
+
+	double tangentMag = tangentProjection;
 
 	if (tangentMag < 1e-10)
 	{
-		BiVector arbitrary = (std::abs(m_RadialAxis.e23()) < 0.9f)
-			? BiVector{ 0, 0, 0, 1, 0, 0 }
-		: BiVector{ 0, 0, 0, 0, 1, 0 };
-
-		tangent = arbitrary - m_RadialAxis * (arbitrary | m_RadialAxis);
-		m_TangentialAxis = tangent.Normalized();
 		m_L = 0.0;
 	}
 	else
 	{
-		m_TangentialAxis = tangent.Normalized();
 		m_L = m_DistanceFromBH * tangentMag;
 	}
 
@@ -130,14 +141,24 @@ void LightParticle::SetCaptured()
 
 TriVector LightParticle::GetPosition() const
 {
-	double cosAngle = std::cos(m_OrbitAngle);
-	double sinAngle = std::sin(m_OrbitAngle);
-	
-	// This is a vectorial blend. This should be removed in favour of PGA.
-	BiVector direction = m_RadialAxis * cosAngle + m_TangentialAxis * sinAngle;
+	float angleDegrees = static_cast<float>(m_OrbitAngle * 180.0 / utils::g_Pi);
+	Motor rotator = Motor::Rotation(angleDegrees, m_OrbitalNormal);
 
+	BiVector rotatedRadial = (rotator * m_RadialAxis * ~rotator).Grade2().Normalized();
+
+	BiVector translationDir{ rotatedRadial.e23(), rotatedRadial.e31(), rotatedRadial.e12(), 0, 0, 0 };
+	Motor translator = Motor::Translation(static_cast<float>(m_DistanceFromBH), translationDir);
+
+	return (translator * m_BlackHolePos * ~translator).Grade3().Normalized();
+
+
+	/*double cosAngle = std::cos(m_OrbitAngle);
+	double sinAngle = std::sin(m_OrbitAngle);
+
+	BiVector direction = m_RadialAxis * cosAngle + m_TangentialAxis * sinAngle;
 	BiVector translationDir{ direction.e23(), direction.e31(), direction.e12(), 0, 0, 0 };
 
 	Motor translator = Motor::Translation(static_cast<float>(m_DistanceFromBH), translationDir);
-	return (translator * m_BlackHolePos * ~translator).Grade3().Normalized();
+
+	return (translator * m_BlackHolePos * ~translator).Grade3().Normalized();*/
 }
