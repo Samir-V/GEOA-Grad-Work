@@ -55,7 +55,7 @@ void Simulator::SpawnLightParticle(const TriVector& position, const BiVector& di
 
 void Simulator::UpdateScreenBounds(const Camera* pCamera, int screenWidth, int screenHeight, float fov, float aspectRatio)
 {
-	constexpr int PointRadius = 8;
+	constexpr int PointRadius = 30;
 
 	m_ParticleScreenBounds.resize(m_LightParticles.size());
 	for (size_t index = 0; index < m_LightParticles.size(); ++index)
