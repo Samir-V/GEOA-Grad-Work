@@ -50,6 +50,9 @@ void Camera::Rotate(float deltaYaw, float deltaPitch)
 	m_Yaw += deltaYaw * MouseSensitivity;
 	m_Pitch += deltaPitch * MouseSensitivity;
 
+	if (m_Pitch > 89.0f) m_Pitch = 89.0f;
+	if (m_Pitch < -89.0f) m_Pitch = -89.0f;
+
 	UpdateTransform();
 }
 
@@ -71,11 +74,12 @@ void Camera::Update()
 
 void Camera::UpdateTransform()
 {
-	BiVector yawAxis{0, 0, 0, 0, 1, 0};  
+	BiVector yawAxis{0, 0, 0, 0, 1, 0};
 	Motor yawRotation = Motor::Rotation(m_Yaw, yawAxis);
 
-	BiVector pitchAxis{0, 0, 0, 1, 0, 0}; 
-	Motor pitchRotation = Motor::Rotation(m_Pitch, pitchAxis);
+	BiVector pitchAxisLocal{0, 0, 0, 1, 0, 0};
+	BiVector pitchAxisRotated = (yawRotation * pitchAxisLocal * ~yawRotation).Grade2();
+	Motor pitchRotation = Motor::Rotation(m_Pitch, pitchAxisRotated);
 
 	Motor rotation = pitchRotation * yawRotation;
 
