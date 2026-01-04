@@ -299,13 +299,13 @@ void Renderer::ProcessCameraInput(float elapsedSec)
 	float right = 0.0f;
 	float up = 0.0f;
 
-	if (m_PressedKeys.count(SDLK_w)) forward += elapsedSec;
-	if (m_PressedKeys.count(SDLK_s)) forward -= elapsedSec;
-	if (m_PressedKeys.count(SDLK_d)) right += elapsedSec;
-	if (m_PressedKeys.count(SDLK_a)) right -= elapsedSec;
+	if (m_PressedKeys.contains(SDLK_w)) forward += elapsedSec;
+	if (m_PressedKeys.contains(SDLK_s)) forward -= elapsedSec;
+	if (m_PressedKeys.contains(SDLK_d)) right += elapsedSec;
+	if (m_PressedKeys.contains(SDLK_a)) right -= elapsedSec;
 
-	if (m_PressedKeys.count(SDLK_SPACE)) up += elapsedSec;
-	if (m_PressedKeys.count(SDLK_LSHIFT)) up -= elapsedSec;
+	if (m_PressedKeys.contains(SDLK_SPACE)) up += elapsedSec;
+	if (m_PressedKeys.contains(SDLK_LSHIFT)) up -= elapsedSec;
 
 	if (forward != 0.0f || right != 0.0f || up != 0.0f)
 	{

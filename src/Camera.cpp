@@ -1,4 +1,6 @@
 #include "Camera.h"
+
+#include <algorithm>
 #include "FlyFish.h"
 
 const TriVector& Camera::GetOrigin() const
@@ -50,8 +52,8 @@ void Camera::Rotate(float deltaYaw, float deltaPitch)
 	m_Yaw += deltaYaw * MouseSensitivity;
 	m_Pitch += deltaPitch * MouseSensitivity;
 
-	if (m_Pitch > 89.0f) m_Pitch = 89.0f;
-	if (m_Pitch < -89.0f) m_Pitch = -89.0f;
+	m_Pitch = std::min(m_Pitch, 89.0f);
+	m_Pitch = std::max(m_Pitch, -89.0f);
 
 	UpdateTransform();
 }
@@ -83,11 +85,8 @@ void Camera::UpdateTransform()
 
 	Motor rotation = pitchRotation * yawRotation;
 
-	float tx = m_Origin.e032();
-	float ty = m_Origin.e013();
-	float tz = m_Origin.e021();
-
-	Motor translation{1, -tx/2, -ty/2, -tz/2, 0, 0, 0, 0};
+	BiVector direction{ m_Origin.e032(), m_Origin.e013(), m_Origin.e021(), 0, 0, 0 };
+	Motor translation = Motor::Translation(direction.VNorm(), direction);
 
 	m_Transform = translation * rotation;
 }
