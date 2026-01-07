@@ -24,7 +24,6 @@ public:
 	// Camera control methods
 	void Rotate(float deltaYaw, float deltaPitch);
 	void Move(float forward, float right, float up, float elapsedSec);
-	void Update();
 
 	float MouseSensitivity{ 0.1f };
 	float MoveSpeed{ 5.0f };

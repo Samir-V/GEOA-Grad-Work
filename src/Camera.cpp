@@ -22,19 +22,13 @@ BiVector Camera::CameraToWorldLine(const BiVector& line) const
 bool Camera::WorldToScreen(const TriVector& point, int screenWidth, int screenHeight,
 	float fov, float aspectRatio, int& outScreenX, int& outScreenY) const
 {
-	TriVector camPos = m_Origin.Normalized();
+	TriVector screenPoint = (~m_Transform * point * m_Transform).Grade3();
 
-	BiVector toPoint = point.Normalized() & camPos;
+	const float camX = screenPoint.e032();
+	const float camY = screenPoint.e013();
+	const float camZ = screenPoint.e021();
 
-	BiVector worldForward = CameraToWorldLine(BiVector{0, 0, 0, 0, 0, 1});
-	BiVector worldRight = CameraToWorldLine(BiVector{0, 0, 0, 1, 0, 0});
-	BiVector worldUp = CameraToWorldLine(BiVector{0, 0, 0, 0, 1, 0});
-
-	float camZ = toPoint | worldForward;
 	if (camZ <= 0.01f) return false;
-
-	float camX = toPoint | worldRight;
-	float camY = toPoint | worldUp;
 
 	outScreenX = static_cast<int>((camX / camZ / (aspectRatio * fov) + 1.0f) * 0.5f * screenWidth);
 	outScreenY = static_cast<int>((1.0f - camY / camZ / fov) * 0.5f * screenHeight);
@@ -70,10 +64,6 @@ void Camera::Move(float forward, float right, float up, float elapsedSec)
 	UpdateTransform();
 }
 
-void Camera::Update()
-{
-}
-
 void Camera::UpdateTransform()
 {
 	BiVector yawAxis{0, 0, 0, 0, 1, 0};
@@ -86,7 +76,13 @@ void Camera::UpdateTransform()
 	Motor rotation = pitchRotation * yawRotation;
 
 	BiVector direction{ m_Origin.e032(), m_Origin.e013(), m_Origin.e021(), 0, 0, 0 };
-	Motor translation = Motor::Translation(direction.VNorm(), direction);
 
+	if (direction.VNorm() == 0.0f)
+	{
+		m_Transform = rotation;
+		return;
+	}
+
+	Motor translation = Motor::Translation(direction.VNorm(), direction);
 	m_Transform = translation * rotation;
 }
