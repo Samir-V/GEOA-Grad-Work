@@ -6,8 +6,6 @@ struct BlackHoleData
 	TriVector Position;
 	double Mass;
 	double SchwarzschildRadius;
-	double PhotonSphereRadius;
-	double CriticalESquared;
 };
 
 class BlackHole
@@ -22,6 +20,4 @@ private:
 	TriVector m_Position;
 	double m_Mass;
 	double m_SchwarzschildRadius;
-	double m_PhotonSphereRadius;
-	double m_CriticalESquared;
 };
