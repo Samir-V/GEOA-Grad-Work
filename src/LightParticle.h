@@ -16,7 +16,7 @@ class LightParticle
 {
 public:
 
-	LightParticle(TriVector position, BiVector initialDirection, const BlackHoleData& blackHole);
+	LightParticle(const TriVector& position, BiVector initialDirection, const BlackHoleData& blackHole);
 	[[nodiscard]] TriVector GetPosition() const;
 	[[nodiscard]] LightState GetState() const { return m_State; }
 	[[nodiscard]] const std::vector<TriVector>& GetPath() const { return m_Path; }
