@@ -76,19 +76,11 @@
 		{
 			std::cout << "Particle will ESCAPE. Impact parameter: " << impactParameter << std::endl;
 		}
-
-		/*std::cout << "Distance from BH: " << m_DistanceFromBH << std::endl;
-		std::cout << "Alignment: " << alignment << std::endl;
-		std::cout << "Tangent magnitude: " << tangentMag << std::endl;
-		std::cout << "Angular momentum L: " << m_L << std::endl;
-		std::cout << "Radial speed: " << m_RadialSpeed << std::endl;
-		std::cout << "RadialAxis: (" << m_RadialAxis.e23() << ", " << m_RadialAxis.e31() << ", " << m_RadialAxis.e12() << ")" << std::endl;
-		std::cout << "VelocityDir: (" << velocityDir.e23() << ", " << velocityDir.e31() << ", " << velocityDir.e12() << ")" << std::endl;*/
 	}
 
-	void LightParticle::Update(float deltaTime, float simulationSpeed)
+	void LightParticle::UpdateRK4(float deltaTime, float simulationSpeed)
 	{
-		if (m_State == LightState::CAPTURED || m_State == LightState::ESCAPING) 
+		if (m_State == LightState::CAPTURED) 
 		{
 			return;
 		}
@@ -99,25 +91,42 @@
 			return;
 		}
 
-		double r = m_DistanceFromBH;
-		double r4 = r * r * r * r;
+		double dt = deltaTime * simulationSpeed;
 
-		double dV_dr = m_L * m_L * (3.0 * m_SchwarzschildRadius - 2.0 * r) / r4;
-		double radialAcceleration = -0.5 * dV_dr;
+		ParticleState state = GetCurrentState();
 
-		auto actualStep = deltaTime * simulationSpeed;
+		StateDerivative k1 = ComputeDerivatives(state);
 
-		m_RadialSpeed += radialAcceleration * actualStep;
-		m_DistanceFromBH += m_RadialSpeed * actualStep;
+		ParticleState state2;
+		state2.radialDistance = state.radialDistance + 0.5 * dt * k1.radialVelocityChange;
+		state2.radialVelocity = state.radialVelocity + 0.5 * dt * k1.radialAcceleration;
+		state2.orbitalAngle = state.orbitalAngle + 0.5 * dt * k1.angularVelocityChange;
+		state2.angularVelocity = state.angularVelocity + 0.5 * dt * k1.angularAcceleration;
+		StateDerivative k2 = ComputeDerivatives(state2);
+
+		ParticleState state3;
+		state3.radialDistance = state.radialDistance + 0.5 * dt * k2.radialVelocityChange;
+		state3.radialVelocity = state.radialVelocity + 0.5 * dt * k2.radialAcceleration;
+		state3.orbitalAngle = state.orbitalAngle + 0.5 * dt * k2.angularVelocityChange;
+		state3.angularVelocity = state.angularVelocity + 0.5 * dt * k2.angularAcceleration;
+		StateDerivative k3 = ComputeDerivatives(state3);
+
+		ParticleState state4;
+		state4.radialDistance = state.radialDistance + dt * k3.radialVelocityChange;
+		state4.radialVelocity = state.radialVelocity + dt * k3.radialAcceleration;
+		state4.orbitalAngle = state.orbitalAngle + dt * k3.angularVelocityChange;
+		state4.angularVelocity = state.angularVelocity + dt * k3.angularAcceleration;
+		StateDerivative k4 = ComputeDerivatives(state4);
+
+		m_DistanceFromBH += (dt / 6.0) * (k1.radialVelocityChange + 2 * k2.radialVelocityChange + 2 * k3.radialVelocityChange + k4.radialVelocityChange);
+		m_RadialSpeed += (dt / 6.0) * (k1.radialAcceleration + 2 * k2.radialAcceleration + 2 * k3.radialAcceleration + k4.radialAcceleration);
+		m_OrbitAngle += (dt / 6.0) * (k1.angularVelocityChange + 2 * k2.angularVelocityChange + 2 * k3.angularVelocityChange + k4.angularVelocityChange);
 
 		if (m_DistanceFromBH <= m_SchwarzschildRadius)
 		{
 			m_State = LightState::CAPTURED;
 			return;
 		}
-
-		double angularSpeed = m_L / (m_DistanceFromBH * m_DistanceFromBH);
-		m_OrbitAngle += angularSpeed * actualStep;
 
 		m_TimeSinceLastPath += deltaTime;
 		if (m_TimeSinceLastPath >= PathUpdateInterval)
@@ -150,15 +159,33 @@
 		Motor translator = Motor::Translation(static_cast<float>(m_DistanceFromBH), translationDir);
 
 		return (translator * m_BlackHolePos * ~translator).Grade3().Normalized();
+	}
 
+	StateDerivative LightParticle::ComputeDerivatives(const ParticleState& state) const
+	{
+		StateDerivative deriv;
 
-		/*double cosAngle = std::cos(m_OrbitAngle);
-		double sinAngle = std::sin(m_OrbitAngle);
+		double r = state.radialDistance;
+		double r4 = r * r * r * r;
 
-		BiVector direction = m_RadialAxis * cosAngle + m_TangentialAxis * sinAngle;
-		BiVector translationDir{ direction.e23(), direction.e31(), direction.e12(), 0, 0, 0 };
+		deriv.radialVelocityChange = state.radialVelocity;
 
-		Motor translator = Motor::Translation(static_cast<float>(m_DistanceFromBH), translationDir);
+		double dV_dr = m_L * m_L * (3.0 * m_SchwarzschildRadius - 2.0 * r) / r4;
+		deriv.radialAcceleration = -0.5 * dV_dr;
 
-		return (translator * m_BlackHolePos * ~translator).Grade3().Normalized();*/
+		deriv.angularVelocityChange = m_L / (r * r);
+
+		deriv.angularAcceleration = 0.0;
+
+		return deriv;
+	}
+
+	ParticleState LightParticle::GetCurrentState() const
+	{
+		ParticleState state;
+		state.radialDistance = m_DistanceFromBH;
+		state.radialVelocity = m_RadialSpeed;
+		state.orbitalAngle = m_OrbitAngle;
+		state.angularVelocity = m_L / (m_DistanceFromBH * m_DistanceFromBH);
+		return state;
 	}

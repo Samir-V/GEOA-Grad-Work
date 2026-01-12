@@ -21,13 +21,13 @@ void Simulator::Update(float elapsedSec, const TriVector& cameraPos)
 	}
 
 	// Remove captured particles
-	std::erase_if(m_LightParticles, [](const LightParticle& p) { return p.GetState() == LightState::CAPTURED || p.GetState() == LightState::ESCAPING; });
+	std::erase_if(m_LightParticles, [](const LightParticle& p) { return p.GetState() == LightState::CAPTURED; });
 }
 
 
 void Simulator::UpdateParticleRK4(LightParticle& particle, const TriVector& cameraPos, float deltaTime)
 {
-	if (particle.GetState() == LightState::CAPTURED || particle.GetState() == LightState::ESCAPING)
+	if (particle.GetState() == LightState::CAPTURED)
 	{
 		return;
 	}
@@ -45,7 +45,7 @@ void Simulator::UpdateParticleRK4(LightParticle& particle, const TriVector& came
 		return;
 	}
 
-	particle.Update(deltaTime, SimulationSpeed);
+	particle.UpdateRK4(deltaTime, SimulationSpeed);
 }
 
 void Simulator::SpawnLightParticle(const TriVector& position, const BiVector& direction)

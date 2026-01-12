@@ -8,8 +8,21 @@ struct BlackHoleData;
 enum class LightState
 {
 	MOVING,       
-	CAPTURED,     
-	ESCAPING
+	CAPTURED
+};
+
+struct ParticleState {
+	double radialDistance;    
+	double radialVelocity;      
+	double orbitalAngle;       
+	double angularVelocity;
+};
+
+struct StateDerivative {
+	double radialVelocityChange;       
+	double radialAcceleration;          
+	double angularVelocityChange;    
+	double angularAcceleration;
 };
 
 class LightParticle
@@ -22,9 +35,11 @@ public:
 	[[nodiscard]] const std::vector<TriVector>& GetPath() const { return m_Path; }
 	[[nodiscard]] double GetESquared() const { return m_E * m_E; }
 
-	void Update(float deltaTime, float simulationSpeed);
+	void UpdateRK4(float deltaTime, float simulationSpeed);
 	void SetCaptured();
 	void SetState(LightState state) { m_State = state; }
+	StateDerivative ComputeDerivatives(const ParticleState& state) const;
+	ParticleState GetCurrentState() const;
 
 private:
 
