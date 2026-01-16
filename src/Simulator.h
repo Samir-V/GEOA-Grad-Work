@@ -34,6 +34,9 @@ public:
 	void UpdateScreenBounds(const Camera* pCamera, int screenWidth, int screenHeight, float fov, float aspectRatio);
 	HitResult TestRayAtPixel(const BiVector& ray, const Camera* pCamera, int px, int py) const;
 
+	void SpawnParticleGrid(const Camera* pCamera, int gridWidth = 3, int gridHeight = 3,
+		float spacing = 1.0f, float distanceFromCamera = 10.0f);
+
 	static constexpr float SimulationSpeed{ 20 };
 	static constexpr float MaxDistanceSq = 50.0f * 50.0f;
 

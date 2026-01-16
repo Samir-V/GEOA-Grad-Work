@@ -67,6 +67,6 @@ private:
 	LightState m_State;
 	std::vector<TriVector> m_Path;
 	float m_TimeSinceLastPath{ 0.0f };
-	static constexpr size_t MaxPathSize = 4;
+	static constexpr size_t MaxPathSize = 3;
 	static constexpr float PathUpdateInterval = 0.3f;
 };

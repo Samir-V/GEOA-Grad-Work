@@ -1,6 +1,7 @@
 #include "Simulator.h"
 #include "Camera.h"
 #include <algorithm>
+#include <random>
 
 Simulator::Simulator(BlackHole blackHole) :
 	m_BlackHole{ std::move(blackHole) }
@@ -160,3 +161,46 @@ HitResult Simulator::TestRayAtPixel(const BiVector& ray, const Camera* pCamera, 
 	return result;
 }
 
+void Simulator::SpawnParticleGrid(const Camera* pCamera, int gridWidth, int gridHeight,
+	float spacing, float distanceFromCamera)
+{
+	BiVector forward{ 0, 0, 0, 0, 0, 1 };
+	BiVector worldForward = pCamera->CameraToWorldLine(forward);
+
+	BiVector right{ 0, 0, 0, 1, 0, 0 };
+	BiVector worldRight = pCamera->CameraToWorldLine(right);
+
+	BiVector up{ 0, 0, 0, 0, 1, 0 };
+	BiVector worldUp = pCamera->CameraToWorldLine(up);
+
+	BiVector direction{ 0, 0, 0, worldForward.e23(), worldForward.e31(), worldForward.e12() };
+
+	BiVector forwardDisplacement{ worldForward.e23(), worldForward.e31(), worldForward.e12(), 0, 0, 0 };
+	BiVector rightDisplacement{ worldRight.e23(), worldRight.e31(), worldRight.e12(), 0, 0, 0 };
+	BiVector upDisplacement{ worldUp.e23(), worldUp.e31(), worldUp.e12(), 0, 0, 0};
+
+	float offsetX = -(gridWidth - 1) * spacing / 2.0f;
+	float offsetY = -(gridHeight - 1) * spacing / 2.0f;
+
+	for (int row = 0; row < gridHeight; ++row)
+	{
+		for (int col = 0; col < gridWidth; ++col)
+		{
+			float xPos = offsetX + col * spacing;
+			float yPos = offsetY + row * spacing;
+
+			TriVector currentPos = pCamera->GetOrigin();
+
+			auto forwardMotor = Motor::Translation(distanceFromCamera, forwardDisplacement);
+			currentPos = (forwardMotor * currentPos * ~forwardMotor).Grade3().Normalized();
+
+			auto rightMotor = Motor::Translation(xPos, rightDisplacement);
+			currentPos = (rightMotor * currentPos * ~rightMotor).Grade3().Normalized();
+
+			auto upMotor = Motor::Translation(yPos, upDisplacement);
+			currentPos = (upMotor * currentPos * ~upMotor).Grade3().Normalized();
+
+			SpawnLightParticle(currentPos, direction);
+		}
+	}
+}

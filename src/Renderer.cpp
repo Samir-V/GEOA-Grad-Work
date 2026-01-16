@@ -271,6 +271,11 @@ void Renderer::ProcessKeyUpEvent(const SDL_KeyboardEvent& e)
 			direction);
 	}
 
+	if (e.keysym.scancode == SDL_SCANCODE_H)
+	{
+		m_SimulatorUPtr->SpawnParticleGrid(m_CameraUPtr.get(), 5, 5, 2.0f, 15.0f);
+	}
+
 	m_PressedKeys.erase(e.keysym.sym);
 }
 

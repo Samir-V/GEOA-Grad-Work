@@ -24,15 +24,7 @@
 
 		BiVector velocityDir = BiVector{ 0, 0, 0, initialDirection.e23(), initialDirection.e31(), initialDirection.e12() }.Normalized();
 
-		// COMMUTATOR product of the gep between two lines gives the common normal for these two lines
-		// velocity of the particle is in the plane by definition
-		// radial axis is created by two points that are in the plane, hence also is in the plane
-		// hence the commutator product produces a normal to the plane they lie in
 		m_OrbitalNormal = (velocityDir * m_RadialAxis).Grade2().Normalized();
-
-		// Tangential axis must lie in the plane and be perpendicular to the radial axis
-		// that means it is also perpendicular to the orbital normal by definition
-		// commutator product produces a line perpendicular to them both
 		m_TangentialAxis = (m_OrbitalNormal * m_RadialAxis).Grade2().Normalized();
 
 		double alignment = -(velocityDir | m_RadialAxis);
